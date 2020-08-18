@@ -99,42 +99,37 @@ func getSites(path, suffix, tag string) (int, error) {
 func init() {
 	block, err := hosts.GetUrlsFromTxt("block.txt")
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatalln(err)
 	}
 	
 	log.Println("init allow list ...")
 	body, err := getBodyFromUrls(allowUrls)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatalln(err)
 	}
 	hosts.Resolve(body, allowList)
 	
 	log.Println("init block list ...")
 	body, err = getBodyFromUrls(block)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatalln(err)
 	}
 	hosts.Resolve(body, blockList, allowList)
 	
 	log.Println("init direct list ...")
 	body, err = getBodyFromUrls(directUrls)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatalln(err)
 	}
 	hosts.Resolve(body, directList)
 	
 	log.Println(v2flySites)
 	name := filepath.Base(v2flySites)
 	if err := getFile(v2flySites, name); err != nil {
-		log.Println(err)
-		return
+		log.Fatalln(err)
 	}
 	log.Printf("unzip: %s", v2flySitePath)
 	if err := unzip(name); err != nil {
-		log.Println(err)
+		log.Fatalln(err)
 	}
 }
