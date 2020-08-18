@@ -1,0 +1,7 @@
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt
+https://pexcn.me/daily/adlist/adlist.txt
+https://raw.githubusercontent.com/notracking/hosts-blocklists/master/adblock/adblock.txt
+https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt
+https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt
+https://www.github.developerdan.com/hosts/lists/ads-and-tracking-extended.txt
