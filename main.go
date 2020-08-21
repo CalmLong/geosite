@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"log"
@@ -19,30 +18,26 @@ func main() {
 	
 	total, err := getSites(dir, blockTag, v2flyBlockTag)
 	if err != nil {
-		fmt.Println("Failed: ", err)
-		return
+		log.Fatalln("Failed: ", err)
 	}
 	log.Printf("block sties: %d", total)
 	
 	total, err = getSites(dir, directTag, v2flyDirectTag)
 	if err != nil {
-		fmt.Println("Failed: ", err)
-		return
+		log.Fatalln("Failed: ", err)
 	}
 	log.Printf("direct sties: %d", total)
 	
 	protoList := new(router.GeoSiteList)
 	if err := readFiles(dir, protoList); err != nil {
-		log.Printf("protoList err: %s", err.Error())
-		return
+		log.Fatalf("protoList err: %s", err.Error())
 	}
 	protoBytes, err := proto.Marshal(protoList)
 	if err != nil {
-		fmt.Println("Failed:", err)
-		return
+		log.Fatalln("Failed: ", err)
 	}
 	if err := ioutil.WriteFile("geosite.dat", protoBytes, 0644); err != nil {
-		fmt.Println("Failed: ", err)
+		log.Fatalln("Failed: ", err)
 	}
 	
 	log.Println("deleted tmp files")
