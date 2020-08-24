@@ -40,3 +40,12 @@
 ## 引用以下项目
 
 * [github.com/v2fly/domain-list-community](https://github.com/v2fly/domain-list-community)
+
+域名数据来源：
+
+* [github.com/CalmLong/whitelist](https://github.com/CalmLong/whitelist) `allow`
+* [github.com/privacy-protection-tools/dead-horse](https://github.com/privacy-protection-tools/dead-horse) `allow`
+* [github.com/neodevpro/neodevhost](https://github.com/neodevpro/neodevhost) `allow`
+* [github.com/felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) `direct`
+* [block.txt](block.txt) `block`
+
