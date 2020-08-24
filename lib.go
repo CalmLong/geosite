@@ -17,13 +17,14 @@ const (
 	
 	allowSites1 = "https://raw.githubusercontent.com/CalmLong/whitelist/master/white.txt"
 	allowSites2 = "https://raw.githubusercontent.com/privacy-protection-tools/dead-horse/master/anti-ad-white-list.txt"
+	allowSites3 = "https://raw.githubusercontent.com/neodevpro/neodevhost/master/allow"
 	
 	directSite = "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf"
 )
 
 const geoSitePath = "geodata"
 
-var allowUrls = []string{allowSites1, allowSites2}
+var allowUrls = []string{allowSites1, allowSites2, allowSites3}
 var directUrls = []string{directSite}
 
 var allowList = make(map[string]struct{}, 0)
