@@ -122,6 +122,7 @@ func init() {
 		log.Fatalln(err)
 	}
 	hosts.Resolve(body, directList)
+	hosts.AppendLocal(directList)
 	
 	log.Println(v2flySites)
 	name := filepath.Base(v2flySites)

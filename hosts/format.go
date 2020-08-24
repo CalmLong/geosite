@@ -3,7 +3,6 @@ package hosts
 import (
 	"bufio"
 	"io"
-	"log"
 	"net"
 	"net/url"
 	"sort"
@@ -22,7 +21,6 @@ var localList = []string{
 	"ip6-allnodes",
 	"ip6-allrouters",
 	"ip6-allhosts",
-	"0.0.0.0",
 }
 
 var domainSuffix = []string{".com.cn", ".net.cn", ".org.cn", ".gov.cn", ".ah.cn", ".bj.cn", ".cq.cn", ".fj.cn",
@@ -100,6 +98,17 @@ func isNotExit(original string, allow ...map[string]struct{}) bool {
 	return true
 }
 
+func parseUrl(raw string) string {
+	raw = strings.ReplaceAll(raw, "http://", "")
+	raw = strings.ReplaceAll(raw, "https://", "")
+	raw = strings.ReplaceAll(raw, "ftp://", "")
+	raw = strings.ReplaceAll(raw, "websocket://", "")
+	if i := strings.IndexRune(raw, '/'); i != -1 {
+		return raw[:i]
+	}
+	return raw
+}
+
 func Resolve(body []io.Reader, list map[string]struct{}, allow ...map[string]struct{}) {
 	for _, body := range body {
 		reader := bufio.NewReader(body)
@@ -156,15 +165,25 @@ func Resolve(body []io.Reader, list map[string]struct{}, allow ...map[string]str
 			if strings.ContainsRune(newOrg, ':') {
 				newOrg = newOrg[:strings.IndexRune(newOrg, ':')]
 			}
+			newOrg = parseUrl(newOrg)
 			if !isNotExit(newOrg, allow...) {
 				continue
 			}
 			urlStr, err := url.Parse(newOrg)
 			if err != nil {
-				log.Println(err)
+				continue
+			}
+			// 如果为 IP 则跳过
+			if err := net.ParseIP(urlStr.String()); err != nil {
 				continue
 			}
 			list[urlStr.String()] = struct{}{}
 		}
+	}
+}
+
+func AppendLocal(directList map[string]struct{}) {
+	for _, v := range localList {
+		directList[v] = struct{}{}
 	}
 }
