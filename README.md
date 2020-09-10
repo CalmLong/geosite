@@ -18,6 +18,13 @@
       {
         "type": "field",
         "domain": [
+          "geosite:private"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "domain": [
           "geosite:ads"
         ],
         "outboundTag": "block"

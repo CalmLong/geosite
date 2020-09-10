@@ -1,12 +1,14 @@
 package main
 
 const (
-	v2flyBlockTag  = "CATEGORY-ADS-ALL"
-	v2flyDirectTag = "CN"
-	blockTag       = "ads"
-	directTag      = "cn"
-	suffixFull     = "full:"
-	suffixDomain   = "domain:"
+	v2flyBlockTag   = "CATEGORY-ADS-ALL"
+	v2flyDirectTag  = "CN"
+	v2flyPrivateTag = "PRIVATE"
+	privateTag      = "private"
+	blockTag        = "ads"
+	directTag       = "cn"
+	suffixFull      = "full:"
+	suffixDomain    = "domain:"
 )
 
 const (
@@ -30,3 +32,17 @@ var directUrls = []string{directSite}
 var allowList = make(map[string]struct{}, 0)
 var blockList = make(map[string]struct{}, 0)
 var directList = make(map[string]struct{}, 0)
+
+var localList = []string{
+	"localhost",
+	"ip6-localhost",
+	"localhost.localdomain",
+	"local",
+	"broadcasthost",
+	"ip6-loopback",
+	"ip6-localnet",
+	"ip6-mcastprefix",
+	"ip6-allnodes",
+	"ip6-allrouters",
+	"ip6-allhosts",
+}

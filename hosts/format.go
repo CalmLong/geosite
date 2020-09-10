@@ -9,20 +9,6 @@ import (
 	"strings"
 )
 
-var localList = []string{
-	"localhost",
-	"ip6-localhost",
-	"localhost.localdomain",
-	"local",
-	"broadcasthost",
-	"ip6-loopback",
-	"ip6-localnet",
-	"ip6-mcastprefix",
-	"ip6-allnodes",
-	"ip6-allrouters",
-	"ip6-allhosts",
-}
-
 var domainSuffix = []string{".com.cn", ".net.cn", ".org.cn", ".gov.cn", ".ah.cn", ".bj.cn", ".cq.cn", ".fj.cn",
 	".gd.cn", ".gs.cn", ".gx.cn", ".gz.cn", ".ha.cn", ".hb.cn", ".he.cn", ".hi.cn", ".hk.cn", ".hn.cn", ".jl.cn",
 	".js.cn", ".jx.cn", ".ln.cn", ".mo.cn", ".nm.cn", ".nx.cn", ".qh.cn", ".sc.cn", ".sd.cn", ".sh.cn", ".sn.cn",
@@ -39,7 +25,7 @@ const (
 func Classify(list map[string]struct{}, writer *bufio.Writer, params []string) int {
 	domains := make([]string, 0)
 	fulls := make([]string, 0)
-	for k, _ := range list {
+	for k := range list {
 		if err := net.ParseIP(k); err != nil {
 			continue
 		}
@@ -65,10 +51,7 @@ func Classify(list map[string]struct{}, writer *bufio.Writer, params []string) i
 	}
 	sort.Strings(fulls)
 	sort.Strings(domains)
-	for i, f := range fulls {
-		if i == 0 {
-			continue
-		}
+	for _, f := range fulls {
 		_, _ = writer.WriteString(params[0] + f + params[1] + "\n")
 	}
 	for _, d := range domains {
@@ -85,11 +68,6 @@ func format(newOrg string, prefix []string) string {
 }
 
 func isNotExit(original string, allow ...map[string]struct{}) bool {
-	for _, l := range localList {
-		if l == original {
-			return false
-		}
-	}
 	if len(allow) > 0 && len(allow[0]) > 0 {
 		if _, ok := allow[0][original]; ok {
 			return false
@@ -179,11 +157,5 @@ func Resolve(body []io.Reader, list map[string]struct{}, allow ...map[string]str
 			}
 			list[urlStr.String()] = struct{}{}
 		}
-	}
-}
-
-func AppendLocal(directList map[string]struct{}) {
-	for _, v := range localList {
-		directList[v] = struct{}{}
 	}
 }

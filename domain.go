@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"geosite/hosts"
 	"io"
 	"log"
@@ -56,9 +55,6 @@ func getSites(path, suffix, tag string) (int, error) {
 						return 0, err
 					}
 				}
-				if err := buff.Flush(); err != nil {
-					return 0, err
-				}
 				allow = allowList
 			case v2flyDirectTag:
 				for k := range directList {
@@ -67,11 +63,16 @@ func getSites(path, suffix, tag string) (int, error) {
 						return 0, err
 					}
 				}
-				if err := buff.Flush(); err != nil {
-					return 0, err
+			case v2flyPrivateTag:
+				for _, v := range localList {
+					_, err := buff.WriteString(v + "\n")
+					if err != nil {
+						return 0, err
+					}
 				}
-			default:
-				return 0, errors.New("unsupported tag")
+			}
+			if err := buff.Flush(); err != nil {
+				return 0, err
 			}
 		}
 	}
@@ -122,7 +123,6 @@ func init() {
 		log.Fatalln(err)
 	}
 	hosts.Resolve(body, directList)
-	hosts.AppendLocal(directList)
 	
 	log.Println(v2flySites)
 	name := filepath.Base(v2flySites)
