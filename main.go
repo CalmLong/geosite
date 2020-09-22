@@ -28,8 +28,6 @@ func main() {
 	}
 	log.Printf("direct sties: %d", total)
 	
-	_, _ = getSites(dir, privateTag, v2flyPrivateTag)
-	
 	protoList := new(router.GeoSiteList)
 	if err := readFiles(dir, protoList); err != nil {
 		log.Fatalf("protoList err: %s", err.Error())

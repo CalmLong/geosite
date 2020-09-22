@@ -3,8 +3,6 @@ package main
 const (
 	v2flyBlockTag   = "CATEGORY-ADS-ALL"
 	v2flyDirectTag  = "CN"
-	v2flyPrivateTag = "PRIVATE"
-	privateTag      = "private"
 	blockTag        = "ads"
 	directTag       = "cn"
 	suffixFull      = "full:"

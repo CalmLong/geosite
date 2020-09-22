@@ -6,95 +6,62 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"v2ray.com/core/app/router"
 )
 
-func getBodyFromUrls(urls []string) ([]io.Reader, error) {
-	body := make([]io.Reader, 0)
+func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
+	dst = make(map[string]struct{})
 	for _, u := range urls {
 		log.Println(u)
 		resp, err := http.Get(u)
 		if err != nil {
-			return body, err
+			log.Println(err)
+			return dst
 		}
-		body = append(body, resp.Body)
+		body := bufio.NewReader(resp.Body)
+		for {
+			l, _, e := body.ReadLine()
+			if e == io.EOF {
+				break
+			}
+			dst[string(l)] = struct{}{}
+		}
 	}
-	return body, nil
+	return dst
 }
 
-func getSites(path, suffix, tag string) (int, error) {
+func getSites(path, tag, v2flyTag string) (int, error) {
 	protoList := new(router.GeoSiteList)
 	if err := readFiles(pwd()+v2flySitePathData, protoList); err != nil {
 		return 0, err
 	}
 	
-	orgTag, err := os.Create(suffix)
-	if err != nil {
-		return 0, err
-	}
-	
-	buff := bufio.NewWriter(orgTag)
 	allow := map[string]struct{}{}
+	src := map[string]struct{}{}
 	
 	for _, i := range protoList.Entry {
-		if strings.EqualFold(i.CountryCode, tag) {
-			for _, d := range i.Domain {
-				_, err := buff.WriteString(d.GetValue() + "\n")
-				if err != nil {
-					return 0, err
-				}
-			}
-			switch tag {
+		if strings.EqualFold(i.CountryCode, v2flyTag) {
+			switch v2flyTag {
 			case v2flyBlockTag:
-				for k := range blockList {
-					_, err := buff.WriteString(k + "\n")
-					if err != nil {
-						return 0, err
-					}
+				for _, d := range i.Domain {
+					blockList[d.GetValue()] = struct{}{}
 				}
 				allow = allowList
+				src = blockList
 			case v2flyDirectTag:
-				for k := range directList {
-					_, err := buff.WriteString(k + "\n")
-					if err != nil {
-						return 0, err
-					}
+				for _, d := range i.Domain {
+					directList[d.GetValue()] = struct{}{}
 				}
-			case v2flyPrivateTag:
-				for _, v := range localList {
-					_, err := buff.WriteString(v + "\n")
-					if err != nil {
-						return 0, err
-					}
-				}
-			}
-			if err := buff.Flush(); err != nil {
-				return 0, err
+				src = directList
 			}
 		}
 	}
 	
-	_ = orgTag.Close()
-	
-	reader, err := os.Open(orgTag.Name())
-	if err != nil {
-		return 0, err
-	}
-	
 	rules := []string{suffixFull, "", suffixDomain, ""}
-	total, err := hosts.WriteFile(path+"/"+suffix, []io.Reader{reader}, rules, allow)
-	if err != nil {
-		return 0, err
-	}
-	
-	_ = reader.Close()
-	
-	_ = os.RemoveAll(orgTag.Name())
-	_ = os.RemoveAll(reader.Name())
-	return total, nil
+	name := path + "/" + tag
+	return hosts.WriteFile(name, src, rules, allow)
 }
 
 func init() {
@@ -104,25 +71,16 @@ func init() {
 	}
 	
 	log.Println("init allow list ...")
-	body, err := getBodyFromUrls(allowUrls)
-	if err != nil {
-		log.Fatalln(err)
+	hosts.Resolve(getBodyFromUrls(allowUrls), allowList)
+	for _, l := range localList {
+		allowList[l] = struct{}{}
 	}
-	hosts.Resolve(body, allowList)
 	
 	log.Println("init block list ...")
-	body, err = getBodyFromUrls(block)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	hosts.Resolve(body, blockList, allowList)
+	hosts.Resolve(getBodyFromUrls(block), blockList, allowList)
 	
 	log.Println("init direct list ...")
-	body, err = getBodyFromUrls(directUrls)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	hosts.Resolve(body, directList)
+	hosts.Resolve(getBodyFromUrls(directUrls), directList)
 	
 	log.Println(v2flySites)
 	name := filepath.Base(v2flySites)

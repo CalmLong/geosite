@@ -2,7 +2,6 @@ package hosts
 
 import (
 	"bufio"
-	"io"
 	"net"
 	"net/url"
 	"sort"
@@ -22,10 +21,10 @@ const (
 	dnsmasqLast  = "/114.114.114.114"
 )
 
-func Classify(list map[string]struct{}, writer *bufio.Writer, params []string) int {
+func Classify(dst map[string]struct{}, writer *bufio.Writer, params []string) int {
 	domains := make([]string, 0)
 	fulls := make([]string, 0)
-	for k := range list {
+	for k := range dst {
 		if err := net.ParseIP(k); err != nil {
 			continue
 		}
@@ -87,75 +86,68 @@ func parseUrl(raw string) string {
 	return raw
 }
 
-func Resolve(body []io.Reader, list map[string]struct{}, allow ...map[string]struct{}) {
-	for _, body := range body {
-		reader := bufio.NewReader(body)
-		for {
-			o, _, e := reader.ReadLine()
-			if e == io.EOF {
-				break
-			}
-			original := string(o)
-			// 第一个字符为 # 或 ! 时跳过
-			if strings.IndexRune(original, j) == 0 || strings.IndexRune(original, '!') == 0 {
-				continue
-			}
-			// 为空行时跳过
-			if strings.TrimSpace(original) == "" {
-				continue
-			}
-			// 中间包含特殊空格的
-			if strings.ContainsRune(original, '\t') {
-				original = strings.ReplaceAll(original, "\t", " ")
-			}
-			newOrg := original
-			// 移除前缀为 0.0.0.0 或者 127.0.0.1 (移除第一个空格前的内容)
-			index := strings.IndexRune(original, ' ')
-			if index > -1 {
-				newOrg = strings.ReplaceAll(original, original[:index], "")
-			}
-			// 移除行中的空格
-			newOrg = strings.TrimSpace(newOrg)
-			// 再一次验证第一个字符为 # 时跳过
-			if strings.IndexRune(original, j) == 0 {
-				continue
-			}
-			if strings.ContainsRune(newOrg, j) {
-				newOrg = newOrg[:strings.IndexRune(newOrg, j)]
-			}
-			// dnsmasq-list
-			newOrg = format(newOrg, []string{dnsmasqIndex, dnsmasqLast})
-			// adblock
-			if strings.ContainsRune(newOrg, '^') {
-				// 子域名包含 * 的不会被解析
-				if strings.ContainsRune(newOrg, '*') {
-					continue
-				}
-				// 表达式不会被解析
-				if strings.Contains(newOrg, "/^") {
-					continue
-				}
-				// 基础白名单规则会被一同解析
-				newOrg = format(newOrg, []string{"||", "^", "@@"})
-			}
-			newOrg = strings.TrimSpace(newOrg)
-			// 检测是否有端口号，有则移除端口号
-			if strings.ContainsRune(newOrg, ':') {
-				newOrg = newOrg[:strings.IndexRune(newOrg, ':')]
-			}
-			newOrg = parseUrl(newOrg)
-			if !isNotExit(newOrg, allow...) {
-				continue
-			}
-			urlStr, err := url.Parse(newOrg)
-			if err != nil {
-				continue
-			}
-			// 如果为 IP 则跳过
-			if err := net.ParseIP(urlStr.String()); err != nil {
-				continue
-			}
-			list[urlStr.String()] = struct{}{}
+func Resolve(src map[string]struct{}, dst map[string]struct{}, allow ...map[string]struct{}) {
+	for k := range src {
+		original := k
+		// 第一个字符为 # 或 ! 时跳过
+		if strings.IndexRune(original, j) == 0 || strings.IndexRune(original, '!') == 0 {
+			continue
 		}
+		// 为空行时跳过
+		if strings.TrimSpace(original) == "" {
+			continue
+		}
+		// 中间包含特殊空格的
+		if strings.ContainsRune(original, '\t') {
+			original = strings.ReplaceAll(original, "\t", " ")
+		}
+		newOrg := original
+		// 移除前缀为 0.0.0.0 或者 127.0.0.1 (移除第一个空格前的内容)
+		index := strings.IndexRune(original, ' ')
+		if index > -1 {
+			newOrg = strings.ReplaceAll(original, original[:index], "")
+		}
+		// 移除行中的空格
+		newOrg = strings.TrimSpace(newOrg)
+		// 再一次验证第一个字符为 # 时跳过
+		if strings.IndexRune(original, j) == 0 {
+			continue
+		}
+		if strings.ContainsRune(newOrg, j) {
+			newOrg = newOrg[:strings.IndexRune(newOrg, j)]
+		}
+		// dnsmasq-list
+		newOrg = format(newOrg, []string{dnsmasqIndex, dnsmasqLast})
+		// adblock
+		if strings.ContainsRune(newOrg, '^') {
+			// 子域名包含 * 的不会被解析
+			if strings.ContainsRune(newOrg, '*') {
+				continue
+			}
+			// 表达式不会被解析
+			if strings.Contains(newOrg, "/^") {
+				continue
+			}
+			// 基础白名单规则会被一同解析
+			newOrg = format(newOrg, []string{"||", "^", "@@"})
+		}
+		newOrg = strings.TrimSpace(newOrg)
+		// 检测是否有端口号，有则移除端口号
+		if strings.ContainsRune(newOrg, ':') {
+			newOrg = newOrg[:strings.IndexRune(newOrg, ':')]
+		}
+		newOrg = parseUrl(newOrg)
+		if !isNotExit(newOrg, allow...) {
+			continue
+		}
+		urlStr, err := url.Parse(newOrg)
+		if err != nil {
+			continue
+		}
+		// 如果为 IP 则跳过
+		if err := net.ParseIP(urlStr.String()); err != nil {
+			continue
+		}
+		dst[urlStr.String()] = struct{}{}
 	}
 }
