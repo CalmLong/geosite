@@ -1,5 +1,7 @@
 package main
 
+import "path/filepath"
+
 const (
 	v2flyBlockTag   = "CATEGORY-ADS-ALL"
 	v2flyDirectTag  = "CN"
@@ -13,9 +15,7 @@ const (
 	v2flySites    = "https://github.com/v2fly/domain-list-community/archive/master.zip"
 	v2flySitePath = "domain-list-community-master"
 	
-	v2flySitePathData = "domain-list-community-master/data"
-	
-	allowSites1 = "https://raw.githubusercontent.com/CalmLong/whitelist/master/white.txt"
+	allowSites1 = "https://raw.githubusercontent.com/CalmLong/allow-list/master/allow.txt"
 	allowSites2 = "https://raw.githubusercontent.com/privacy-protection-tools/dead-horse/master/anti-ad-white-list.txt"
 	allowSites3 = "https://raw.githubusercontent.com/neodevpro/neodevhost/master/allow"
 	
@@ -23,6 +23,9 @@ const (
 )
 
 const geoSitePath = "geodata"
+
+var v2flySitePathData = filepath.Join("domain-list-community-master", "data")
+
 
 var allowUrls = []string{allowSites1, allowSites2, allowSites3}
 var directUrls = []string{directSite}
