@@ -144,10 +144,14 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}, allow ...map[stri
 		if err != nil {
 			continue
 		}
+		urlString := urlStr.String()
 		// 如果为 IP 则跳过
-		if err := net.ParseIP(urlStr.String()); err != nil {
+		if err := net.ParseIP(urlString); err != nil {
 			continue
 		}
-		dst[urlStr.String()] = struct{}{}
+		if strings.IndexRune(urlString, '.') == 0 {
+			urlString = urlString[1:]
+		}
+		dst[urlString] = struct{}{}
 	}
 }
