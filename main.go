@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 	"v2ray.com/core/app/router"
 )
@@ -42,8 +43,8 @@ func main() {
 	
 	log.Println("deleted tmp files")
 	_ = os.RemoveAll(dir)
-	_ = os.RemoveAll(pwd() + "master.zip")
-	_ = os.RemoveAll(pwd() + v2flySitePath)
+	_ = os.RemoveAll(filepath.Join(pwd(), "master.zip"))
+	_ = os.RemoveAll(filepath.Join(pwd(), v2flySitePath))
 	
 	log.Printf("created. %ds", int64(time.Now().Sub(t).Seconds()))
 }

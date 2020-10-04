@@ -34,7 +34,7 @@ func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
 
 func getSites(path, tag, v2flyTag string) (int, error) {
 	protoList := new(router.GeoSiteList)
-	if err := readFiles(pwd()+v2flySitePathData, protoList); err != nil {
+	if err := readFiles(filepath.Join(pwd(), v2flySitePathData), protoList); err != nil {
 		return 0, err
 	}
 	
@@ -60,8 +60,7 @@ func getSites(path, tag, v2flyTag string) (int, error) {
 	}
 	
 	rules := []string{suffixFull, "", suffixDomain, ""}
-	name := path + "/" + tag
-	return hosts.WriteFile(name, src, rules, allow)
+	return hosts.WriteFile(filepath.Join(path, tag), src, rules, allow)
 }
 
 func init() {

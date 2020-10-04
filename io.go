@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -15,17 +16,12 @@ func pwd(r ...string) string {
 	}
 	dir := str
 	if len(r) > 0 && strings.TrimSpace(r[0]) != "" {
-		dir = str + "/" + r[0]
+		dir = filepath.Join(str, r[0])
 	}
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		log.Panicln(err)
 	}
-	return path(dir)
-}
-
-func path(path string) string {
-	path = strings.Replace(path, "\\", "/", -1)
-	return strings.TrimRight(path, "/") + "/"
+	return dir
 }
 
 func isExist(path string) bool {
@@ -51,7 +47,6 @@ func unzip(fileName string, output ...string) error {
 				return err
 			}
 		}
-		outPath = path(outPath)
 	}
 	for _, z := range r.Reader.File {
 		name := z.Name
