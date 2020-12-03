@@ -3,12 +3,12 @@ package main
 import "path/filepath"
 
 const (
-	v2flyBlockTag   = "CATEGORY-ADS-ALL"
-	v2flyDirectTag  = "CN"
-	blockTag        = "ads"
-	directTag       = "cn"
-	suffixFull      = "full:"
-	suffixDomain    = "domain:"
+	v2flyBlockTag  = "CATEGORY-ADS-ALL"
+	v2flyDirectTag = "CN"
+	blockTag       = "ads"
+	directTag      = "cn"
+	suffixFull     = "full:"
+	suffixDomain   = "domain:"
 )
 
 const (
@@ -19,16 +19,17 @@ const (
 	allowSites2 = "https://raw.githubusercontent.com/privacy-protection-tools/dead-horse/master/anti-ad-white-list.txt"
 	allowSites3 = "https://raw.githubusercontent.com/neodevpro/neodevhost/master/allow"
 	
-	directSite = "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf"
+	directSite1 = "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf"
+	directSite2 = "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf"
+	directSite3 = "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf"
 )
 
 const geoSitePath = "geodata"
 
 var v2flySitePathData = filepath.Join("domain-list-community-master", "data")
 
-
 var allowUrls = []string{allowSites1, allowSites2, allowSites3}
-var directUrls = []string{directSite}
+var directUrls = []string{directSite1, directSite2, directSite3}
 
 var allowList = make(map[string]struct{}, 0)
 var blockList = make(map[string]struct{}, 0)
