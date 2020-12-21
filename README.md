@@ -10,7 +10,7 @@
 
 稍等片刻输出 `geosite.dat`
 
-* 可识别 `http_proxy` 环境变量
+* 可识别 `https_proxy` 环境变量
 
 ### 配置示例
 
@@ -46,6 +46,14 @@
 * [github.com/CalmLong/whitelist](https://github.com/CalmLong/whitelist) `allow`
 * [github.com/privacy-protection-tools/dead-horse](https://github.com/privacy-protection-tools/dead-horse) `allow`
 * [github.com/neodevpro/neodevhost](https://github.com/neodevpro/neodevhost) `allow`
+* [github.com/anudeepND/whitelist](https://github.com/anudeepND/whitelist) `allow`
 * [github.com/felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) `direct`
-* [block.txt](block.txt) `block`
+
+仅用于测试：
+
+* [https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts](https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts)
+* [https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt](https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt)
+
+
+
 
