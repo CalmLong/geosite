@@ -7,7 +7,6 @@ const (
 	v2flyDirectTag = "CN"
 	adsTag         = "ads"
 	cnTag          = "cn"
-	ptrTag         = "ptr"
 	suffixFull     = "full:"
 	suffixDomain   = "domain:"
 )
@@ -37,7 +36,6 @@ var allowList = make(map[string]struct{}, 0)
 var blockList = make(map[string]struct{}, 0)
 var directList = make(map[string]struct{}, 0)
 
-var ptrList = make(map[string]struct{}, 0)
 var localList = []string{
 	"localhost",
 	"ip6-localhost",

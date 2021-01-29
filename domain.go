@@ -111,9 +111,6 @@ func init() {
 	log.Println("init cn list ...")
 	hosts.Resolve(getBodyFromUrls(directUrls), directList)
 	
-	log.Println("init ptr list ...")
-	hosts.Resolve(getBodyFormFile("ptr.txt"), ptrList)
-	
 	log.Println(v2flySites)
 	name := filepath.Base(v2flySites)
 	if err := getFile(v2flySites, name); err != nil {

@@ -29,16 +29,15 @@ func main() {
 	}
 	log.Printf("cn sties: %d", total)
 	
-	total, err = getSites(dir, ptrTag, "", ptrList)
-	if err != nil {
-		log.Fatalln("Failed: ", err)
-	}
-	log.Printf("ptr sties: %d", total)
-	
 	protoList := new(router.GeoSiteList)
 	if err := readFiles(dir, protoList); err != nil {
 		log.Fatalf("protoList err: %s", err.Error())
 	}
+	
+	if err := readFiles("data", protoList); err != nil {
+		log.Fatalf("protoList err: %s", err.Error())
+	}
+	
 	protoBytes, err := proto.Marshal(protoList)
 	if err != nil {
 		log.Fatalln("Failed: ", err)
