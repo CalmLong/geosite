@@ -17,17 +17,23 @@ func main() {
 	
 	t := time.Now()
 	
-	total, err := getSites(dir, blockTag, v2flyBlockTag)
+	total, err := getSites(dir, adsTag, v2flyBlockTag)
 	if err != nil {
 		log.Fatalln("Failed: ", err)
 	}
-	log.Printf("block sties: %d", total)
+	log.Printf("ads sties: %d", total)
 	
-	total, err = getSites(dir, directTag, v2flyDirectTag)
+	total, err = getSites(dir, cnTag, v2flyDirectTag)
 	if err != nil {
 		log.Fatalln("Failed: ", err)
 	}
-	log.Printf("direct sties: %d", total)
+	log.Printf("cn sties: %d", total)
+	
+	total, err = getSites(dir, ptrTag, "", ptrList)
+	if err != nil {
+		log.Fatalln("Failed: ", err)
+	}
+	log.Printf("ptr sties: %d", total)
 	
 	protoList := new(router.GeoSiteList)
 	if err := readFiles(dir, protoList); err != nil {

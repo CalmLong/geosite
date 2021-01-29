@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"v2ray.com/core/app/router"
@@ -32,29 +33,58 @@ func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
 	return dst
 }
 
-func getSites(path, tag, v2flyTag string) (int, error) {
-	protoList := new(router.GeoSiteList)
-	if err := readFiles(filepath.Join(pwd(), v2flySitePathData), protoList); err != nil {
-		return 0, err
+func getBodyFormFile(name string) (dst map[string]struct{}) {
+	dst = make(map[string]struct{})
+	fi, err := os.Open(name)
+	if err != nil {
+		log.Println("getBodyFormFile:", err)
+		return dst
 	}
+	body := bufio.NewReader(fi)
+	for {
+		l, _, e := body.ReadLine()
+		if e == io.EOF {
+			break
+		}
+		c := string(l)
+		if c == "#" {
+			continue
+		}
+		dst[c] = struct{}{}
+	}
+	return dst
+}
+
+func getSites(path, tag, v2flyTag string, extList ...map[string]struct{}) (int, error) {
+	var allow, src map[string]struct{}
 	
-	allow := map[string]struct{}{}
-	src := map[string]struct{}{}
-	
-	for _, i := range protoList.Entry {
-		if strings.EqualFold(i.CountryCode, v2flyTag) {
-			switch v2flyTag {
-			case v2flyBlockTag:
-				for _, d := range i.Domain {
-					blockList[d.GetValue()] = struct{}{}
+	if len(extList) == 0 {
+		protoList := new(router.GeoSiteList)
+		if err := readFiles(filepath.Join(pwd(), v2flySitePathData), protoList); err != nil {
+			return 0, err
+		}
+		for _, i := range protoList.Entry {
+			if strings.EqualFold(i.CountryCode, v2flyTag) {
+				switch v2flyTag {
+				case v2flyBlockTag:
+					for _, d := range i.Domain {
+						blockList[d.GetValue()] = struct{}{}
+					}
+					allow = allowList
+					src = blockList
+				case v2flyDirectTag:
+					for _, d := range i.Domain {
+						directList[d.GetValue()] = struct{}{}
+					}
+					src = directList
 				}
-				allow = allowList
-				src = blockList
-			case v2flyDirectTag:
-				for _, d := range i.Domain {
-					directList[d.GetValue()] = struct{}{}
-				}
-				src = directList
+			}
+		}
+	} else {
+		src = make(map[string]struct{})
+		for _, list := range extList {
+			for k, v := range list {
+				src[k] = v
 			}
 		}
 	}
@@ -66,7 +96,10 @@ func getSites(path, tag, v2flyTag string) (int, error) {
 func init() {
 	block, err := hosts.GetUrlsFromTxt("block.txt")
 	if err != nil {
-		log.Fatalln(err)
+		log.Println("read [block.txt] failed, ignore")
+	} else {
+		log.Println("init ads list ...")
+		hosts.Resolve(getBodyFromUrls(block), blockList, allowList)
 	}
 	
 	log.Println("init allow list ...")
@@ -75,11 +108,11 @@ func init() {
 		allowList[l] = struct{}{}
 	}
 	
-	log.Println("init block list ...")
-	hosts.Resolve(getBodyFromUrls(block), blockList, allowList)
-	
-	log.Println("init direct list ...")
+	log.Println("init cn list ...")
 	hosts.Resolve(getBodyFromUrls(directUrls), directList)
+	
+	log.Println("init ptr list ...")
+	hosts.Resolve(getBodyFormFile("ptr.txt"), ptrList)
 	
 	log.Println(v2flySites)
 	name := filepath.Base(v2flySites)
