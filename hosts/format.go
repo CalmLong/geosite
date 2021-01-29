@@ -21,42 +21,48 @@ const (
 	dnsmasqLast  = "/114.114.114.114"
 )
 
-func Classify(dst map[string]struct{}, writer *bufio.Writer, params []string) int {
-	domains := make([]string, 0)
-	fulls := make([]string, 0)
-	for k := range dst {
-		if err := net.ParseIP(k); err != nil {
-			continue
-		}
-		switch strings.Count(k, ".") {
-		case 1:
-			domains = append(domains, k)
-		case 2:
-			var is bool
-			for _, suffix := range domainSuffix {
-				if strings.Contains(k, suffix) {
-					is = true
-					domains = append(domains, k)
-					break
-				}
-			}
-			if is {
+func Classify(dst map[string]struct{}, writer *bufio.Writer, params []string, force bool) int {
+	if !force {
+		domains := make([]string, 0)
+		fulls := make([]string, 0)
+		for k := range dst {
+			if err := net.ParseIP(k); err != nil {
 				continue
 			}
-			fallthrough
-		default:
-			fulls = append(fulls, k)
+			switch strings.Count(k, ".") {
+			case 1:
+				domains = append(domains, k)
+			case 2:
+				var is bool
+				for _, suffix := range domainSuffix {
+					if strings.Contains(k, suffix) {
+						is = true
+						domains = append(domains, k)
+						break
+					}
+				}
+				if is {
+					continue
+				}
+				fallthrough
+			default:
+				fulls = append(fulls, k)
+			}
 		}
+		sort.Strings(fulls)
+		sort.Strings(domains)
+		for _, f := range fulls {
+			_, _ = writer.WriteString(params[0] + f + params[1] + "\n")
+		}
+		for _, d := range domains {
+			_, _ = writer.WriteString(params[2] + d + params[3] + "\n")
+		}
+		return len(domains) + len(fulls)
 	}
-	sort.Strings(fulls)
-	sort.Strings(domains)
-	for _, f := range fulls {
-		_, _ = writer.WriteString(params[0] + f + params[1] + "\n")
+	for k := range dst {
+		_, _ = writer.WriteString(params[0] + k + "\n")
 	}
-	for _, d := range domains {
-		_, _ = writer.WriteString(params[2] + d + params[3] + "\n")
-	}
-	return len(domains) + len(fulls)
+	return len(dst)
 }
 
 func format(newOrg string, prefix []string) string {

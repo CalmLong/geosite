@@ -1,6 +1,7 @@
 package main
 
 import (
+	"geosite/hosts"
 	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"log"
@@ -29,12 +30,14 @@ func main() {
 	}
 	log.Printf("cn sties: %d", total)
 	
+	total, err = hosts.WriteFile(filepath.Join(dir, "ptr"), ptrList, []string{suffixDomain}, true)
+	if err != nil {
+		log.Fatalln("Failed: ", err)
+	}
+	log.Printf("ptr sties: %d", total)
+	
 	protoList := new(router.GeoSiteList)
 	if err := readFiles(dir, protoList); err != nil {
-		log.Fatalf("protoList err: %s", err.Error())
-	}
-	
-	if err := readFiles("data", protoList); err != nil {
 		log.Fatalf("protoList err: %s", err.Error())
 	}
 	

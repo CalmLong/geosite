@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"v2ray.com/core/app/router"
@@ -33,64 +32,31 @@ func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
 	return dst
 }
 
-func getBodyFormFile(name string) (dst map[string]struct{}) {
-	dst = make(map[string]struct{})
-	fi, err := os.Open(name)
-	if err != nil {
-		log.Println("getBodyFormFile:", err)
-		return dst
-	}
-	body := bufio.NewReader(fi)
-	for {
-		l, _, e := body.ReadLine()
-		if e == io.EOF {
-			break
-		}
-		c := string(l)
-		if c == "#" {
-			continue
-		}
-		dst[c] = struct{}{}
-	}
-	return dst
-}
-
-func getSites(path, tag, v2flyTag string, extList ...map[string]struct{}) (int, error) {
+func getSites(path, tag, v2flyTag string) (int, error) {
 	var allow, src map[string]struct{}
-	
-	if len(extList) == 0 {
-		protoList := new(router.GeoSiteList)
-		if err := readFiles(filepath.Join(pwd(), v2flySitePathData), protoList); err != nil {
-			return 0, err
-		}
-		for _, i := range protoList.Entry {
-			if strings.EqualFold(i.CountryCode, v2flyTag) {
-				switch v2flyTag {
-				case v2flyBlockTag:
-					for _, d := range i.Domain {
-						blockList[d.GetValue()] = struct{}{}
-					}
-					allow = allowList
-					src = blockList
-				case v2flyDirectTag:
-					for _, d := range i.Domain {
-						directList[d.GetValue()] = struct{}{}
-					}
-					src = directList
+	protoList := new(router.GeoSiteList)
+	if err := readFiles(filepath.Join(pwd(), v2flySitePathData), protoList); err != nil {
+		return 0, err
+	}
+	for _, i := range protoList.Entry {
+		if strings.EqualFold(i.CountryCode, v2flyTag) {
+			switch v2flyTag {
+			case v2flyBlockTag:
+				for _, d := range i.Domain {
+					blockList[d.GetValue()] = struct{}{}
 				}
-			}
-		}
-	} else {
-		src = make(map[string]struct{})
-		for _, list := range extList {
-			for k, v := range list {
-				src[k] = v
+				allow = allowList
+				src = blockList
+			case v2flyDirectTag:
+				for _, d := range i.Domain {
+					directList[d.GetValue()] = struct{}{}
+				}
+				src = directList
 			}
 		}
 	}
-	
 	rules := []string{suffixFull, "", suffixDomain, ""}
-	return hosts.WriteFile(filepath.Join(path, tag), src, rules, allow)
+	return hosts.WriteFile(filepath.Join(path, tag), src, rules, false, allow)
 }
 
 func init() {
