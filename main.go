@@ -45,6 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed: ", err)
 	}
+	
 	if err := ioutil.WriteFile("geosite.dat", protoBytes, 0644); err != nil {
 		log.Fatalln("Failed: ", err)
 	}
