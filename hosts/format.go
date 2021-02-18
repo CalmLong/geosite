@@ -15,10 +15,8 @@ var domainSuffix = []string{".com.cn", ".net.cn", ".org.cn", ".gov.cn", ".ah.cn"
 }
 
 const (
-	j = '#'
-	
-	dnsmasqIndex = "server=/"
-	dnsmasqLast  = "/114.114.114.114"
+	j       = '#'
+	dnsmasq = "/"
 )
 
 func Classify(dst map[string]struct{}, writer *bufio.Writer, params []string, force bool) int {
@@ -123,7 +121,10 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}, allow ...map[stri
 			newOrg = newOrg[:strings.IndexRune(newOrg, j)]
 		}
 		// dnsmasq-list
-		newOrg = format(newOrg, []string{dnsmasqIndex, dnsmasqLast})
+		if d := strings.Count(newOrg, dnsmasq); d == 2 {
+			newOrg = newOrg[strings.Index(newOrg, dnsmasq)+1:]
+			newOrg = newOrg[:strings.Index(newOrg, dnsmasq)]
+		}
 		// adblock
 		if strings.ContainsRune(newOrg, '^') {
 			// 子域名包含 * 的不会被解析
@@ -134,13 +135,16 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}, allow ...map[stri
 			if strings.Contains(newOrg, "/^") {
 				continue
 			}
-			// 基础白名单规则会被一同解析
-			newOrg = format(newOrg, []string{"||", "^", "@@"})
+			// 允许名单不会被解析
+			if strings.ContainsRune(newOrg, '@') {
+				continue
+			}
+			newOrg = format(newOrg, []string{"||", "^"})
 		}
 		newOrg = strings.TrimSpace(newOrg)
 		// 检测是否有端口号，有则移除端口号
-		if strings.ContainsRune(newOrg, ':') {
-			newOrg = newOrg[:strings.IndexRune(newOrg, ':')]
+		if i := strings.IndexRune(newOrg, ':'); i != -1 {
+			newOrg = newOrg[:i]
 		}
 		newOrg = parseUrl(newOrg)
 		if !isNotExit(newOrg, allow...) {
@@ -152,7 +156,7 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}, allow ...map[stri
 		}
 		urlString := urlStr.String()
 		// 如果为 IP 则跳过
-		if err := net.ParseIP(urlString); err != nil {
+		if ip := net.ParseIP(urlString); ip != nil {
 			continue
 		}
 		if strings.IndexRune(urlString, '.') == 0 {
