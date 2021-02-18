@@ -14,24 +14,24 @@ const (
 const (
 	v2flySites    = "https://github.com/v2fly/domain-list-community/archive/master.zip"
 	v2flySitePath = "domain-list-community-master"
-	
-	allowSites1 = "https://raw.githubusercontent.com/CalmLong/allow-list/master/allow.txt"
-	allowSites2 = "https://raw.githubusercontent.com/privacy-protection-tools/dead-horse/master/anti-ad-white-list.txt"
-	allowSites3 = "https://raw.githubusercontent.com/neodevpro/neodevhost/master/allow"
-	allowSites4 = "https://raw.githubusercontent.com/anudeepND/whitelist/master/domains/whitelist.txt"
-	allowSites5 = "https://raw.githubusercontent.com/notracking/hosts-blocklists-scripts/master/hostnames.whitelist.txt"
-	
-	directSite1 = "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf"
-	directSite2 = "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf"
-	directSite3 = "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf"
 )
 
 const geoSitePath = "geodata"
 
 var v2flySitePathData = filepath.Join("domain-list-community-master", "data")
 
-var allowUrls = []string{allowSites1, allowSites2, allowSites3, allowSites4, allowSites5}
-var directUrls = []string{directSite1, directSite2, directSite3}
+var allowUrls = []string{
+	"https://raw.githubusercontent.com/CalmLong/allow-list/master/allow.txt",
+	"https://raw.githubusercontent.com/privacy-protection-tools/dead-horse/master/anti-ad-white-list.txt",
+	"https://raw.githubusercontent.com/anudeepND/whitelist/master/domains/whitelist.txt",
+	"https://raw.githubusercontent.com/notracking/hosts-blocklists-scripts/master/hostnames.whitelist.txt",
+}
+
+var directUrls = []string{
+	"https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf",
+	"https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf",
+	"https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf",
+}
 
 var allowList = make(map[string]struct{}, 0)
 var blockList = make(map[string]struct{}, 0)
