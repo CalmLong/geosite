@@ -70,15 +70,6 @@ func format(newOrg string, prefix []string) string {
 	return newOrg
 }
 
-func isNotExit(original string, allow ...map[string]struct{}) bool {
-	if len(allow) > 0 && len(allow[0]) > 0 {
-		if _, ok := allow[0][original]; ok {
-			return false
-		}
-	}
-	return true
-}
-
 func parseUrl(raw string) string {
 	raw = strings.ReplaceAll(raw, "http://", "")
 	raw = strings.ReplaceAll(raw, "https://", "")
@@ -90,7 +81,7 @@ func parseUrl(raw string) string {
 	return raw
 }
 
-func Resolve(src map[string]struct{}, dst map[string]struct{}, allow ...map[string]struct{}) {
+func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 	for k := range src {
 		original := k
 		// 第一个字符为 # 或 ! 时跳过
@@ -147,9 +138,6 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}, allow ...map[stri
 			newOrg = newOrg[:i]
 		}
 		newOrg = parseUrl(newOrg)
-		if !isNotExit(newOrg, allow...) {
-			continue
-		}
 		urlStr, err := url.Parse(newOrg)
 		if err != nil {
 			continue

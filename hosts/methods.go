@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-func WriteFile(fileName string, src map[string]struct{}, prefix []string, force bool, allow ...map[string]struct{}) (int, error) {
+func WriteFile(fileName string, src map[string]struct{}, prefix []string, force bool) (int, error) {
 	file, err := os.Create(fileName)
 	if err != nil {
 		return 0, err
 	}
 	dst := make(map[string]struct{}, 0)
-	Resolve(src, dst, allow...)
+	Resolve(src, dst)
 	buff := bufio.NewWriter(file)
 	total := Classify(dst, buff, prefix, force)
 	_ = buff.Flush()
