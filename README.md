@@ -18,6 +18,13 @@
       {
         "type": "field",
         "domain": [
+          "geosite:allow"
+        ],
+        "outboundTag": "direct"
+      },      
+      {
+        "type": "field",
+        "domain": [
           "geosite:ads"
         ],
         "outboundTag": "block"
@@ -38,6 +45,8 @@
 `block.txt` 内的 URL 可以自由添加或删除，其中的域名用于 `ads` 标签
 
 ## 引用以下项目
+
+源码：
 
 * [github.com/v2fly/domain-list-community](https://github.com/v2fly/domain-list-community)
 

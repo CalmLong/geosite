@@ -32,31 +32,36 @@ func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
 	return dst
 }
 
-func getSites(path, tag, v2flyTag string) (int, error) {
-	var allow, src map[string]struct{}
+func getSites(path, tag string) (int, error) {
+	var src map[string]struct{}
 	protoList := new(router.GeoSiteList)
 	if err := readFiles(filepath.Join(pwd(), v2flySitePathData), protoList); err != nil {
 		return 0, err
 	}
-	for _, i := range protoList.Entry {
-		if strings.EqualFold(i.CountryCode, v2flyTag) {
-			switch v2flyTag {
-			case v2flyBlockTag:
+	switch tag {
+	case adsTag:
+		for _, i := range protoList.Entry {
+			if strings.EqualFold(i.CountryCode, v2flyBlockTag) {
 				for _, d := range i.Domain {
 					blockList[d.GetValue()] = struct{}{}
 				}
-				allow = allowList
 				src = blockList
-			case v2flyDirectTag:
+			}
+		}
+	case cnTag:
+		for _, i := range protoList.Entry {
+			if strings.EqualFold(i.CountryCode, v2flyDirectTag) {
 				for _, d := range i.Domain {
 					directList[d.GetValue()] = struct{}{}
 				}
 				src = directList
 			}
 		}
+	case allowTag:
+		src = allowList
 	}
 	rules := []string{suffixFull, "", suffixDomain, ""}
-	return hosts.WriteFile(filepath.Join(path, tag), src, rules, false, allow)
+	return hosts.WriteFile(filepath.Join(path, tag), src, rules, false)
 }
 
 func init() {
@@ -65,7 +70,7 @@ func init() {
 		log.Println("read [block.txt] failed, ignore")
 	} else {
 		log.Println("init ads list ...")
-		hosts.Resolve(getBodyFromUrls(block), blockList, allowList)
+		hosts.Resolve(getBodyFromUrls(block), blockList)
 	}
 	
 	log.Println("init allow list ...")
