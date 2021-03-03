@@ -25,8 +25,6 @@ var v2flySitePathData = filepath.Join("domain-list-community-master", "data")
 var allowUrls = []string{
 	"https://raw.githubusercontent.com/CalmLong/allow-list/master/allow.txt",
 	"https://raw.githubusercontent.com/privacy-protection-tools/dead-horse/master/anti-ad-white-list.txt",
-	"https://raw.githubusercontent.com/anudeepND/whitelist/master/domains/whitelist.txt",
-	"https://raw.githubusercontent.com/notracking/hosts-blocklists-scripts/master/hostnames.whitelist.txt",
 }
 
 var directUrls = []string{
