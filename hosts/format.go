@@ -37,7 +37,7 @@ func cover(uri string) (string, bool) {
 	}
 }
 
-func format(newOrg string, prefix []string) string {
+func format(newOrg string, prefix ...string) string {
 	for _, s := range prefix {
 		newOrg = strings.ReplaceAll(newOrg, s, "")
 	}
@@ -85,7 +85,7 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 		}
 		
 		// V2Ray
-		newOrg = format(newOrg, []string{"domain:", "full:", "regexp:", "keyword:", ":@ads"})
+		newOrg = format(newOrg, "domain:", "full:", "regexp:", "keyword:", ":@ads")
 		
 		// 移除行中的空格
 		newOrg = strings.TrimSpace(newOrg)
@@ -115,7 +115,7 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 			if strings.ContainsRune(newOrg, '@') {
 				continue
 			}
-			newOrg = format(newOrg, []string{"||", "^"})
+			newOrg = format(newOrg, "||", "^")
 		}
 		newOrg = strings.TrimSpace(newOrg)
 		// 检测是否有端口号，有则移除端口号
