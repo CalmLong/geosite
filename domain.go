@@ -6,10 +6,55 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"path/filepath"
+	"sort"
 	"strings"
-	"v2ray.com/core/app/router"
 )
+
+func loadEntry() map[string]*List {
+	ref := make(map[string]*List)
+	ref[allowTag] = getEntry(allowTag, allowList)
+	ref[blockTag] = getEntry(blockTag, blockList)
+	ref[cnTag] = getEntry(cnTag, cnList)
+	return ref
+}
+
+func getEntry(name string, value map[string]struct{}) *List {
+	full := make([]string, 0)
+	domain := make([]string, 0)
+	other := make([]string, 0)
+	
+	for k := range value {
+		if strings.Contains(k, suffixFull) {
+			full = append(full, k)
+			continue
+		}
+		if strings.Contains(k, suffixDomain) {
+			domain = append(domain, k)
+			continue
+		}
+		other = append(other, k)
+	}
+	
+	sort.Strings(full)
+	sort.Strings(domain)
+	sort.Strings(other)
+	
+	lines := make([]string, 0)
+	lines = append(append(full, domain...), other...)
+	
+	list := &List{
+		Name: name,
+	}
+	
+	for _, line := range lines {
+		entry, err := parseEntry(line)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		list.Entry = append(list.Entry, entry)
+	}
+	return list
+}
 
 func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
 	dst = make(map[string]struct{})
@@ -32,38 +77,6 @@ func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
 	return dst
 }
 
-func getSites(path, tag string) (int, error) {
-	var src map[string]struct{}
-	protoList := new(router.GeoSiteList)
-	if err := readFiles(filepath.Join(pwd(), v2flySitePathData), protoList); err != nil {
-		return 0, err
-	}
-	switch tag {
-	case adsTag:
-		for _, i := range protoList.Entry {
-			if strings.EqualFold(i.CountryCode, v2flyBlockTag) {
-				for _, d := range i.Domain {
-					blockList[d.GetValue()] = struct{}{}
-				}
-				src = blockList
-			}
-		}
-	case cnTag:
-		for _, i := range protoList.Entry {
-			if strings.EqualFold(i.CountryCode, v2flyDirectTag) {
-				for _, d := range i.Domain {
-					directList[d.GetValue()] = struct{}{}
-				}
-				src = directList
-			}
-		}
-	case allowTag:
-		src = allowList
-	}
-	rules := []string{suffixFull, "", suffixDomain, ""}
-	return hosts.WriteFile(filepath.Join(path, tag), src, rules, false)
-}
-
 func init() {
 	block, err := hosts.GetUrlsFromTxt("block.txt")
 	if err != nil {
@@ -71,6 +84,7 @@ func init() {
 	} else {
 		log.Println("init ads list ...")
 		hosts.Resolve(getBodyFromUrls(block), blockList)
+		hosts.Resolve(getBodyFromUrls([]string{domainListAdsAllRaw}), blockList)
 	}
 	
 	log.Println("init allow list ...")
@@ -80,15 +94,6 @@ func init() {
 	}
 	
 	log.Println("init cn list ...")
-	hosts.Resolve(getBodyFromUrls(directUrls), directList)
-	
-	log.Println(v2flySites)
-	name := filepath.Base(v2flySites)
-	if err := getFile(v2flySites, name); err != nil {
-		log.Fatalln(err)
-	}
-	log.Printf("unzip: %s", v2flySitePath)
-	if err := unzip(name); err != nil {
-		log.Fatalln(err)
-	}
+	hosts.Resolve(getBodyFromUrls(directUrls), cnList)
+	hosts.Resolve(getBodyFromUrls([]string{domainListCnRaw}), cnList)
 }

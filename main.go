@@ -2,57 +2,41 @@ package main
 
 import (
 	"github.com/golang/protobuf/proto"
+	"github.com/v2fly/v2ray-core/v4/app/router"
 	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"time"
-	"v2ray.com/core/app/router"
 )
-
-var dir = pwd(geoSitePath)
 
 func main() {
 	log.Printf("creating ...")
 	
 	t := time.Now()
 	
-	total, err := getSites(dir, allowTag)
-	if err != nil {
-		log.Fatalln("Failed: ", err)
-	}
-	log.Printf("allow sties: %d", total)
-	
-	total, err = getSites(dir, adsTag)
-	if err != nil {
-		log.Fatalln("Failed: ", err)
-	}
-	log.Printf("ads sties: %d", total)
-	
-	total, err = getSites(dir, cnTag)
-	if err != nil {
-		log.Fatalln("Failed: ", err)
-	}
-	log.Printf("cn sties: %d", total)
+	ref := loadEntry()
 	
 	protoList := new(router.GeoSiteList)
-	if err := readFiles(dir, protoList); err != nil {
-		log.Fatalf("protoList err: %s", err.Error())
+	for _, list := range ref {
+		pl, err := ParseList(list, ref)
+		if err != nil {
+			log.Fatalln("Failed: ", err)
+		}
+		site, err := pl.toProto()
+		if err != nil {
+			log.Fatalln("Failed: ", err)
+		}
+		protoList.Entry = append(protoList.Entry, site)
+		
 	}
 	
 	protoBytes, err := proto.Marshal(protoList)
 	if err != nil {
 		log.Fatalln("Failed: ", err)
 	}
-	
 	if err := ioutil.WriteFile("geosite.dat", protoBytes, 0644); err != nil {
 		log.Fatalln("Failed: ", err)
+	} else {
+		log.Println("geosite.dat has been generated successfully.")
 	}
-	
-	log.Println("deleted tmp files")
-	_ = os.RemoveAll(dir)
-	_ = os.RemoveAll(filepath.Join(pwd(), "master.zip"))
-	_ = os.RemoveAll(filepath.Join(pwd(), v2flySitePath))
-	
 	log.Printf("created. %ds", int64(time.Now().Sub(t).Seconds()))
 }

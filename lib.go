@@ -1,26 +1,12 @@
 package main
 
-import "path/filepath"
-
 const (
-	v2flyNoneTag   = ""
-	v2flyBlockTag  = "CATEGORY-ADS-ALL"
-	v2flyDirectTag = "CN"
-	allowTag       = "allow"
-	adsTag         = "ads"
-	cnTag          = "cn"
-	suffixFull     = "full:"
-	suffixDomain   = "domain:"
+	allowTag     = "allow"
+	blockTag     = "block"
+	cnTag        = "cn"
+	suffixFull   = "full:"
+	suffixDomain = "domain:"
 )
-
-const (
-	v2flySites    = "https://github.com/v2fly/domain-list-community/archive/master.zip"
-	v2flySitePath = "domain-list-community-master"
-)
-
-const geoSitePath = "geodata"
-
-var v2flySitePathData = filepath.Join("domain-list-community-master", "data")
 
 var allowUrls = []string{
 	"https://raw.githubusercontent.com/CalmLong/allow-list/master/allow.txt",
@@ -33,9 +19,14 @@ var directUrls = []string{
 	"https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf",
 }
 
+const (
+	domainListCnRaw     = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/cn.txt"
+	domainListAdsAllRaw = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/category-ads-all.txt"
+)
+
 var allowList = make(map[string]struct{}, 0)
 var blockList = make(map[string]struct{}, 0)
-var directList = make(map[string]struct{}, 0)
+var cnList = make(map[string]struct{}, 0)
 
 var localList = []string{
 	"localhost",
