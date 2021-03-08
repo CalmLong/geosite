@@ -1,14 +1,13 @@
 package hosts
 
 import (
-	"bufio"
 	"net"
 	"net/url"
-	"sort"
 	"strings"
 )
 
-var domainSuffix = []string{".com.cn", ".net.cn", ".org.cn", ".gov.cn", ".ah.cn", ".bj.cn", ".cq.cn", ".fj.cn",
+var domainSuffix = []string{
+	".com.cn", ".net.cn", ".org.cn", ".gov.cn", ".ah.cn", ".bj.cn", ".cq.cn", ".fj.cn",
 	".gd.cn", ".gs.cn", ".gx.cn", ".gz.cn", ".ha.cn", ".hb.cn", ".he.cn", ".hi.cn", ".hk.cn", ".hn.cn", ".jl.cn",
 	".js.cn", ".jx.cn", ".ln.cn", ".mo.cn", ".nm.cn", ".nx.cn", ".qh.cn", ".sc.cn", ".sd.cn", ".sh.cn", ".sn.cn",
 	".sx.cn", ".tj.cn", ".tw.cn", ".xj.cn", ".yn.cn", ".zj.cn",
@@ -19,48 +18,23 @@ const (
 	dnsmasq = "/"
 )
 
-func Classify(dst map[string]struct{}, writer *bufio.Writer, params []string, force bool) int {
-	if !force {
-		domains := make([]string, 0)
-		fulls := make([]string, 0)
-		for k := range dst {
-			if err := net.ParseIP(k); err != nil {
-				continue
-			}
-			switch strings.Count(k, ".") {
-			case 1:
-				domains = append(domains, k)
-			case 2:
-				var is bool
-				for _, suffix := range domainSuffix {
-					if strings.Contains(k, suffix) {
-						is = true
-						domains = append(domains, k)
-						break
-					}
-				}
-				if is {
-					continue
-				}
-				fallthrough
-			default:
-				fulls = append(fulls, k)
+func cover(uri string) (string, bool) {
+	if err := net.ParseIP(uri); err != nil {
+		return "", false
+	}
+	switch strings.Count(uri, ".") {
+	case 1:
+		return "domain:" + uri, true
+	case 2:
+		for _, suffix := range domainSuffix {
+			if strings.Contains(uri, suffix) {
+				return "domain:" + uri, true
 			}
 		}
-		sort.Strings(fulls)
-		sort.Strings(domains)
-		for _, f := range fulls {
-			_, _ = writer.WriteString(params[0] + f + params[1] + "\n")
-		}
-		for _, d := range domains {
-			_, _ = writer.WriteString(params[2] + d + params[3] + "\n")
-		}
-		return len(domains) + len(fulls)
+		fallthrough
+	default:
+		return "full:" + uri, true
 	}
-	for k := range dst {
-		_, _ = writer.WriteString(params[0] + k + "\n")
-	}
-	return len(dst)
 }
 
 func format(newOrg string, prefix []string) string {
@@ -70,15 +44,20 @@ func format(newOrg string, prefix []string) string {
 	return newOrg
 }
 
-func parseUrl(raw string) string {
+func parseUrl(raw string) (string, bool) {
 	raw = strings.ReplaceAll(raw, "http://", "")
 	raw = strings.ReplaceAll(raw, "https://", "")
 	raw = strings.ReplaceAll(raw, "ftp://", "")
 	raw = strings.ReplaceAll(raw, "websocket://", "")
-	if i := strings.IndexRune(raw, '/'); i != -1 {
-		return raw[:i]
+	
+	switch strings.Count(raw, "/") {
+	case 0:
+		return raw, true
+	case 1:
+		return raw[:len(raw)-1], true
+	default:
+		return "", false
 	}
-	return raw
 }
 
 func Resolve(src map[string]struct{}, dst map[string]struct{}) {
@@ -96,12 +75,18 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 		if strings.ContainsRune(original, '\t') {
 			original = strings.ReplaceAll(original, "\t", " ")
 		}
+		
 		newOrg := original
+		
 		// 移除前缀为 0.0.0.0 或者 127.0.0.1 (移除第一个空格前的内容)
-		index := strings.IndexRune(original, ' ')
+		index := strings.IndexRune(newOrg, ' ')
 		if index > -1 {
-			newOrg = strings.ReplaceAll(original, original[:index], "")
+			newOrg = strings.ReplaceAll(newOrg, newOrg[:index], "")
 		}
+		
+		// V2Ray
+		newOrg = format(newOrg, []string{"domain:", "full:", "regexp:", "keyword:", ":@ads"})
+		
 		// 移除行中的空格
 		newOrg = strings.TrimSpace(newOrg)
 		// 再一次验证第一个字符为 # 时跳过
@@ -137,7 +122,13 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 		if i := strings.IndexRune(newOrg, ':'); i != -1 {
 			newOrg = newOrg[:i]
 		}
-		newOrg = parseUrl(newOrg)
+		
+		if v, ok := parseUrl(newOrg); ok {
+			newOrg = v
+		} else {
+			continue
+		}
+		
 		urlStr, err := url.Parse(newOrg)
 		if err != nil {
 			continue
@@ -150,6 +141,8 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 		if strings.IndexRune(urlString, '.') == 0 {
 			urlString = urlString[1:]
 		}
-		dst[urlString] = struct{}{}
+		if uri, ok := cover(urlString); ok {
+			dst[uri] = struct{}{}
+		}
 	}
 }
