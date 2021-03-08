@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"geosite/hosts"
 	"io"
 	"log"
 	"net/http"
@@ -56,44 +55,52 @@ func getEntry(name string, value map[string]struct{}) *List {
 	return list
 }
 
-func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
-	dst = make(map[string]struct{})
-	for _, u := range urls {
-		log.Println(u)
-		resp, err := http.Get(u)
-		if err != nil {
-			log.Println(err)
-			return dst
-		}
-		body := bufio.NewReader(resp.Body)
-		for {
-			l, _, e := body.ReadLine()
-			if e == io.EOF {
-				break
-			}
-			dst[string(l)] = struct{}{}
-		}
+func initSuffix(uri string) {
+	resp, err := http.Get(uri)
+	if err != nil {
+		log.Fatalln(err)
 	}
-	return dst
+	body := bufio.NewReader(resp.Body)
+	for {
+		l, _, e := body.ReadLine()
+		if e == io.EOF {
+			break
+		}
+		line := string(l)
+		if strings.Contains(line, "//") {
+			continue
+		}
+		if strings.Count(line, ".") != 1 {
+			continue
+		}
+		if idx := strings.IndexRune(line, '*'); idx != -1 {
+			line = line[idx+1:]
+		}
+		line = "." + line
+		suffixList[line] = struct{}{}
+	}
 }
 
 func init() {
-	block, err := hosts.GetUrlsFromTxt("block.txt")
+	block, err := GetUrlsFromTxt("block.txt")
 	if err != nil {
 		log.Println("read [block.txt] failed, ignore")
 	} else {
 		log.Println("init ads list ...")
-		hosts.Resolve(getBodyFromUrls(block), blockList)
-		hosts.Resolve(getBodyFromUrls([]string{domainListAdsAllRaw}), blockList)
+		Resolve(getBodyFromUrls(block), blockList)
+		Resolve(getBodyFromUrls([]string{domainListAdsAllRaw}), blockList)
 	}
 	
+	log.Println("init suffix list ...")
+	initSuffix(suffixListRaw)
+	
 	log.Println("init allow list ...")
-	hosts.Resolve(getBodyFromUrls(allowUrls), allowList)
+	Resolve(getBodyFromUrls(allowUrls), allowList)
 	for _, l := range localList {
 		allowList[l] = struct{}{}
 	}
 	
 	log.Println("init cn list ...")
-	hosts.Resolve(getBodyFromUrls(directUrls), cnList)
-	hosts.Resolve(getBodyFromUrls([]string{domainListCnRaw}), cnList)
+	Resolve(getBodyFromUrls(directUrls), cnList)
+	Resolve(getBodyFromUrls([]string{domainListCnRaw}), cnList)
 }

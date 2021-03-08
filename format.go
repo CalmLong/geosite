@@ -1,4 +1,4 @@
-package hosts
+package main
 
 import (
 	"net"
@@ -6,16 +6,9 @@ import (
 	"strings"
 )
 
-var domainSuffix = []string{
-	".com.cn", ".net.cn", ".org.cn", ".gov.cn", ".ah.cn", ".bj.cn", ".cq.cn", ".fj.cn",
-	".gd.cn", ".gs.cn", ".gx.cn", ".gz.cn", ".ha.cn", ".hb.cn", ".he.cn", ".hi.cn", ".hk.cn", ".hn.cn", ".jl.cn",
-	".js.cn", ".jx.cn", ".ln.cn", ".mo.cn", ".nm.cn", ".nx.cn", ".qh.cn", ".sc.cn", ".sd.cn", ".sh.cn", ".sn.cn",
-	".sx.cn", ".tj.cn", ".tw.cn", ".xj.cn", ".yn.cn", ".zj.cn",
-}
-
 const (
-	j       = '#'
-	dnsmasq = "/"
+	j = '#'
+	p = "/"
 )
 
 func cover(uri string) (string, bool) {
@@ -26,7 +19,7 @@ func cover(uri string) (string, bool) {
 	case 1:
 		return "domain:" + uri, true
 	case 2:
-		for _, suffix := range domainSuffix {
+		for suffix := range suffixList {
 			if strings.Contains(uri, suffix) {
 				return "domain:" + uri, true
 			}
@@ -97,9 +90,9 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 			newOrg = newOrg[:strings.IndexRune(newOrg, j)]
 		}
 		// dnsmasq-list
-		if d := strings.Count(newOrg, dnsmasq); d == 2 {
-			newOrg = newOrg[strings.Index(newOrg, dnsmasq)+1:]
-			newOrg = newOrg[:strings.Index(newOrg, dnsmasq)]
+		if d := strings.Count(newOrg, p); d == 2 {
+			newOrg = newOrg[strings.Index(newOrg, p)+1:]
+			newOrg = newOrg[:strings.Index(newOrg, p)]
 		}
 		// adblock
 		if strings.ContainsRune(newOrg, '^') {

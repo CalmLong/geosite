@@ -22,11 +22,15 @@ var directUrls = []string{
 const (
 	domainListCnRaw     = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/cn.txt"
 	domainListAdsAllRaw = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/category-ads-all.txt"
+	suffixListRaw       = "https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat"
 )
 
-var allowList = make(map[string]struct{}, 0)
-var blockList = make(map[string]struct{}, 0)
-var cnList = make(map[string]struct{}, 0)
+var (
+	allowList  = make(map[string]struct{})
+	blockList  = make(map[string]struct{})
+	cnList     = make(map[string]struct{})
+	suffixList = make(map[string]struct{})
+)
 
 var localList = []string{
 	"localhost",

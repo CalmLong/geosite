@@ -1,8 +1,10 @@
-package hosts
+package main
 
 import (
 	"bufio"
 	"io"
+	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"sort"
@@ -40,4 +42,25 @@ func GetUrlsFromTxt(name string) ([]string, error) {
 	}
 	sort.Strings(urls)
 	return urls, fi.Close()
+}
+
+func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
+	dst = make(map[string]struct{})
+	for _, u := range urls {
+		log.Println(u)
+		resp, err := http.Get(u)
+		if err != nil {
+			log.Println(err)
+			return dst
+		}
+		body := bufio.NewReader(resp.Body)
+		for {
+			l, _, e := body.ReadLine()
+			if e == io.EOF {
+				break
+			}
+			dst[string(l)] = struct{}{}
+		}
+	}
+	return dst
 }

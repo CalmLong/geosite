@@ -26,7 +26,6 @@ func main() {
 			log.Fatalln("Failed: ", err)
 		}
 		protoList.Entry = append(protoList.Entry, site)
-		
 	}
 	
 	protoBytes, err := proto.Marshal(protoList)
