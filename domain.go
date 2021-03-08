@@ -56,6 +56,7 @@ func getEntry(name string, value map[string]struct{}) *List {
 }
 
 func initSuffix(uri string) {
+	log.Println(uri)
 	resp, err := http.Get(uri)
 	if err != nil {
 		log.Fatalln(err)
