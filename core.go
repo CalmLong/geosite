@@ -7,7 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"v2ray.com/core/app/router"
+	
+	"github.com/v2fly/v2ray-core/v4/app/router"
 )
 
 type Entry struct {
@@ -89,13 +90,14 @@ func parseDomain(domain string, entry *Entry) error {
 	return errors.New("Invalid format: " + domain)
 }
 
-func parseAttribute(attr string) (router.Domain_Attribute, error) {
+func parseAttribute(attr string) (*router.Domain_Attribute, error) {
 	var attribute router.Domain_Attribute
 	if len(attr) == 0 || attr[0] != '@' {
-		return attribute, errors.New("invalid attribute: " + attr)
+		return &attribute, errors.New("invalid attribute: " + attr)
 	}
 	
-	attr = attr[0:]
+	// Trim attribute prefix `@` character
+	attr = attr[1:]
 	parts := strings.Split(attr, "=")
 	if len(parts) == 1 {
 		attribute.Key = strings.ToLower(parts[0])
@@ -104,11 +106,11 @@ func parseAttribute(attr string) (router.Domain_Attribute, error) {
 		attribute.Key = strings.ToLower(parts[0])
 		intv, err := strconv.Atoi(parts[1])
 		if err != nil {
-			return attribute, errors.New("invalid attribute: " + attr + ": " + err.Error())
+			return &attribute, errors.New("invalid attribute: " + attr + ": " + err.Error())
 		}
 		attribute.TypedValue = &router.Domain_Attribute_IntValue{IntValue: int64(intv)}
 	}
-	return attribute, nil
+	return &attribute, nil
 }
 
 func parseEntry(line string) (Entry, error) {
@@ -129,7 +131,7 @@ func parseEntry(line string) (Entry, error) {
 		if err != nil {
 			return entry, err
 		}
-		entry.Attrs = append(entry.Attrs, &attr)
+		entry.Attrs = append(entry.Attrs, attr)
 	}
 	
 	return entry, nil
@@ -162,6 +164,45 @@ func Load(path string) (*List, error) {
 	return list, nil
 }
 
+func isMatchAttr(Attrs []*router.Domain_Attribute, includeKey string) bool {
+	isMatch := false
+	mustMatch := true
+	matchName := includeKey
+	if strings.HasPrefix(includeKey, "!") {
+		isMatch = true
+		mustMatch = false
+		matchName = strings.TrimLeft(includeKey, "!")
+	}
+	
+	for _, Attr := range Attrs {
+		attrName := Attr.Key
+		if mustMatch {
+			if matchName == attrName {
+				isMatch = true
+				break
+			}
+		} else {
+			if matchName == attrName {
+				isMatch = false
+				break
+			}
+		}
+	}
+	return isMatch
+}
+
+func createIncludeAttrEntrys(list *List, matchAttr *router.Domain_Attribute) []Entry {
+	newEntryList := make([]Entry, 0, len(list.Entry))
+	matchName := matchAttr.Key
+	for _, entry := range list.Entry {
+		matched := isMatchAttr(entry.Attrs, matchName)
+		if matched {
+			newEntryList = append(newEntryList, entry)
+		}
+	}
+	return newEntryList
+}
+
 func ParseList(list *List, ref map[string]*List) (*ParsedList, error) {
 	pl := &ParsedList{
 		Name:      list.Name,
@@ -173,16 +214,36 @@ func ParseList(list *List, ref map[string]*List) (*ParsedList, error) {
 		hasInclude := false
 		for _, entry := range entryList {
 			if entry.Type == "include" {
-				if pl.Inclusion[entry.Value] {
-					continue
-				}
 				refName := strings.ToUpper(entry.Value)
-				pl.Inclusion[refName] = true
-				r := ref[refName]
-				if r == nil {
-					return nil, errors.New(entry.Value + " not found.")
+				if entry.Attrs != nil {
+					for _, attr := range entry.Attrs {
+						InclusionName := strings.ToUpper(refName + "@" + attr.Key)
+						if pl.Inclusion[InclusionName] {
+							continue
+						}
+						pl.Inclusion[InclusionName] = true
+						
+						refList := ref[refName]
+						if refList == nil {
+							return nil, errors.New(entry.Value + " not found.")
+						}
+						attrEntrys := createIncludeAttrEntrys(refList, attr)
+						if len(attrEntrys) != 0 {
+							newEntryList = append(newEntryList, attrEntrys...)
+						}
+					}
+				} else {
+					InclusionName := refName
+					if pl.Inclusion[InclusionName] {
+						continue
+					}
+					pl.Inclusion[InclusionName] = true
+					refList := ref[refName]
+					if refList == nil {
+						return nil, errors.New(entry.Value + " not found.")
+					}
+					newEntryList = append(newEntryList, refList.Entry...)
 				}
-				newEntryList = append(newEntryList, r.Entry...)
 				hasInclude = true
 			} else {
 				newEntryList = append(newEntryList, entry)
@@ -191,43 +252,9 @@ func ParseList(list *List, ref map[string]*List) (*ParsedList, error) {
 		entryList = newEntryList
 		if !hasInclude {
 			break
-			
 		}
 	}
 	pl.Entry = entryList
 	
 	return pl, nil
-}
-
-func readFiles(dir string, protoList *router.GeoSiteList) (err error) {
-	ref := make(map[string]*List)
-	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		list, err := Load(path)
-		if err != nil {
-			return err
-		}
-		ref[list.Name] = list
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	for _, list := range ref {
-		pl, err := ParseList(list, ref)
-		if err != nil {
-			return err
-		}
-		site, err := pl.toProto()
-		if err != nil {
-			return err
-		}
-		protoList.Entry = append(protoList.Entry, site)
-	}
-	return err
 }
