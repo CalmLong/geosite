@@ -25,7 +25,7 @@
       {
         "type": "field",
         "domain": [
-          "geosite:ads"
+          "geosite:block"
         ],
         "outboundTag": "block"
       },
