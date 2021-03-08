@@ -76,7 +76,7 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 			original = strings.ReplaceAll(original, "\t", " ")
 		}
 		
-		newOrg := original
+		newOrg := strings.ToLower(original)
 		
 		// 移除前缀为 0.0.0.0 或者 127.0.0.1 (移除第一个空格前的内容)
 		index := strings.IndexRune(newOrg, ' ')
