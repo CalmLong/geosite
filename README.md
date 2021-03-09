@@ -12,6 +12,9 @@
 
 * 可识别 `https_proxy` 环境变量
 
+程序运行时自动加载同级目录中名为 `block.txt` 的文件，内容为域名列表的 URL (参考 [block.txt](block.txt)) 用于 `block` 标签
+，请确保该文件存在
+
 ### 配置示例
 
 ```json
@@ -38,19 +41,13 @@
       }
 ```
 
-## 其他
-
-程序运行时加载同级目录中名为 `block.txt` 的文件，文件内容为包含域名的 Raw Url；请确保该文件存在
-
-`block.txt` 内的 URL 可以自由添加或删除，其中的域名用于 `ads` 标签
-
 ## 引用以下项目
 
 源码：
 
 * [github.com/v2fly/domain-list-community](https://github.com/v2fly/domain-list-community)
 
-域名数据来源：
+内置域名数据：
 
 * [github.com/CalmLong/whitelist](https://github.com/CalmLong/whitelist) `allow`
 * [github.com/privacy-protection-tools/dead-horse](https://github.com/privacy-protection-tools/dead-horse) `allow`
