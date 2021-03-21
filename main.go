@@ -20,7 +20,7 @@ func main() {
 		isDeath(blockList)
 		log.Printf("clear invalid domain names in cnList...")
 		isDeath(cnList)
-		log.Printf("done. %fm", time.Now().Sub(t).Minutes())
+		log.Printf("done. %.2fm", time.Now().Sub(t).Minutes())
 	}
 	
 	log.Printf("creating ...")
