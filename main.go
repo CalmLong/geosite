@@ -16,11 +16,11 @@ func command() {
 	flag.Parse()
 	if *onlyDomain {
 		log.Printf("only output domain")
-		outputs(coverOnlyDomain, allowList, blockList, cnList)
+		output(coverOnlyDomain, blockList)
 	}
 	if *onlyFull {
 		log.Printf("only output full")
-		outputs(coverOnlyFull, allowList, blockList, cnList)
+		output(coverOnlyFull, blockList)
 	}
 	if *death {
 		t := time.Now()
@@ -31,6 +31,9 @@ func command() {
 }
 
 func main() {
+	// allowList always output full format
+	output(coverOnlyFull, allowList)
+	
 	command()
 	
 	log.Printf("creating ...")
