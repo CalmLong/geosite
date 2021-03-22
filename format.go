@@ -11,22 +11,55 @@ const (
 	p = "/"
 )
 
-func cover(uri string) (string, bool) {
+const (
+	coverDefault    = 0
+	coverOnlyDomain = 1
+	coverOnlyFull   = 2
+)
+
+func removeSuffix(uri string) (string, bool) {
+	for _, l := range localList {
+		if strings.EqualFold(l, uri) {
+			return l, false
+		}
+	}
+	if strings.Contains(uri, "regexp:") {
+		return strings.ReplaceAll(uri, "regexp:", ""), false
+	}
+	if strings.Contains(uri, "keyword:") {
+		return strings.ReplaceAll(uri, "keyword:", ""), false
+	}
+	uri = strings.ReplaceAll(uri, suffixFull, "")
+	uri = strings.ReplaceAll(uri, suffixDomain, "")
+	return uri, true
+}
+
+func cover(uri string, action int) (string, bool) {
 	if err := net.ParseIP(uri); err != nil {
 		return "", false
 	}
-	switch strings.Count(uri, ".") {
-	case 1:
+	uri, _ = removeSuffix(uri)
+	switch action {
+	case coverOnlyDomain:
 		return "domain:" + uri, true
-	case 2:
-		for suffix := range suffixList {
-			if strings.Contains(uri, suffix) {
-				return "domain:" + uri, true
-			}
-		}
-		fallthrough
-	default:
+	case coverOnlyFull:
 		return "full:" + uri, true
+	case coverDefault:
+		switch strings.Count(uri, ".") {
+		case 1:
+			return "domain:" + uri, true
+		case 2:
+			for suffix := range suffixList {
+				if strings.Contains(uri, suffix) {
+					return "domain:" + uri, true
+				}
+			}
+			fallthrough
+		default:
+			return "full:" + uri, true
+		}
+	default:
+		return "", false
 	}
 }
 
@@ -134,7 +167,7 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 		if strings.IndexRune(urlString, '.') == 0 {
 			urlString = urlString[1:]
 		}
-		if uri, ok := cover(urlString); ok {
+		if uri, ok := cover(urlString, coverDefault); ok {
 			dst[uri] = struct{}{}
 		}
 	}

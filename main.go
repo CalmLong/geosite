@@ -9,19 +9,29 @@ import (
 	"time"
 )
 
-func main() {
+func command() {
+	onlyDomain := flag.Bool("d", false, "only output domain: domains")
+	onlyFull := flag.Bool("f", false, "only output full: domains")
 	death := flag.Bool("D", false, "detect and remove invalid domain names")
 	flag.Parse()
+	if *onlyDomain {
+		log.Printf("only output domain")
+		outputs(coverOnlyDomain, allowList, blockList, cnList)
+	}
+	if *onlyFull {
+		log.Printf("only output full")
+		outputs(coverOnlyFull, allowList, blockList, cnList)
+	}
 	if *death {
 		t := time.Now()
-		log.Printf("clear invalid domain names in allowList...")
-		isDeath(allowList)
-		log.Printf("clear invalid domain names in blockList...")
-		isDeath(blockList)
-		log.Printf("clear invalid domain names in cnList...")
-		isDeath(cnList)
+		log.Printf("clear invalid domain names ...")
+		isDeathList(allowList, blockList, cnList)
 		log.Printf("done. %.2fm", time.Now().Sub(t).Minutes())
 	}
+}
+
+func main() {
+	command()
 	
 	log.Printf("creating ...")
 	
