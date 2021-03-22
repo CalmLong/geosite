@@ -2,6 +2,9 @@ package main
 
 import (
 	"bufio"
+	"context"
+	"github.com/v2fly/v2ray-core/v4/app/dns"
+	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
 	"io"
 	"log"
 	"net"
@@ -11,13 +14,17 @@ import (
 )
 
 func handle(originalMap map[string]struct{}, group *sync.WaitGroup, deathChan chan string) {
+	dnsLookup := dns.NewLocalNameServer()
 	var mutex sync.Mutex
 	for uri := range originalMap {
 		mutex.Lock()
 		go func(uri string) {
 			defer group.Done()
 			if uriStr, ok := removeSuffix(uri); ok {
-				ip, _ := net.LookupIP(uriStr)
+				ip, _ := dnsLookup.QueryIP(context.Background(), uriStr, net.IPv4zero, dns_feature.IPOption{
+					IPv4Enable: true,
+					IPv6Enable: true,
+				}, true)
 				if len(ip) > 0 {
 					return
 				}
