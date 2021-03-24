@@ -43,6 +43,7 @@
       {
         "type": "field",
         "domain": [
+          "geosite:local",
           "geosite:allow"
         ],
         "outboundTag": "direct"
@@ -65,9 +66,8 @@
 
 ## 引用以下项目
 
-源码：
-
 * [github.com/v2fly/domain-list-community](https://github.com/v2fly/domain-list-community)
+* [github.com/AdguardTeam/dnsproxy](https://github.com/AdguardTeam/dnsproxy)
 
 内置域名数据：
 

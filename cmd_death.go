@@ -2,9 +2,8 @@ package main
 
 import (
 	"bufio"
-	"context"
-	"github.com/v2fly/v2ray-core/v4/app/dns"
-	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/AdguardTeam/dnsproxy/upstream"
+	"github.com/miekg/dns"
 	"io"
 	"log"
 	"net"
@@ -13,26 +12,57 @@ import (
 	"time"
 )
 
-func handle(originalMap map[string]struct{}, group *sync.WaitGroup, deathChan chan string) {
-	dnsLookup := dns.NewLocalNameServer()
-	var mutex sync.Mutex
-	for uri := range originalMap {
-		mutex.Lock()
-		go func(uri string) {
-			defer group.Done()
-			if uriStr, ok := removeSuffix(uri); ok {
-				ip, _ := dnsLookup.QueryIP(context.Background(), uriStr, net.IPv4zero, dns_feature.IPOption{
-					IPv4Enable: true,
-					IPv6Enable: true,
-				}, true)
-				if len(ip) > 0 {
-					return
-				}
-				deathChan <- uri
-			}
-		}(uri)
-		mutex.Unlock()
+func createHostTestMessage(host string) *dns.Msg {
+	req := dns.Msg{}
+	req.Id = dns.Id()
+	req.RecursionDesired = true
+	name := host + "."
+	req.Question = []dns.Question{
+		{Name: name, Qtype: dns.TypeA, Qclass: dns.ClassINET},
 	}
+	return &req
+}
+
+func handle(originalMap map[string]struct{}, deathChan chan string) {
+	address := "tls://8.8.8.8:853"
+	doq, err := upstream.AddressToUpstream(address, upstream.Options{})
+	
+	if err != nil {
+		panic(err)
+	}
+	
+	var group sync.WaitGroup
+	limit := make(chan struct{}, 1000)
+	
+	for uri := range originalMap {
+		
+		limit <- struct{}{}
+		
+		group.Add(1)
+		
+		go func(uri string, limit chan struct{}) {
+			if uriStr, ok := removeSuffix(uri); ok {
+				
+				msg, err := doq.Exchange(createHostTestMessage(uriStr))
+				if err == nil {
+					if msg.Answer == nil || len(msg.Answer) <= 0 {
+						deathChan <- uri
+					} else {
+						if a, ok := msg.Answer[0].(*dns.A); ok {
+							if net.IPv4(0, 0, 0, 0).Equal(a.A) {
+								deathChan <- uri
+							}
+						}
+					}
+				}
+			}
+			
+			group.Done()
+			<-limit
+		}(uri, limit)
+	}
+	
+	group.Wait()
 }
 
 func rwCache(valueMap map[string]struct{}, write bool) {
@@ -67,35 +97,37 @@ func rwCache(valueMap map[string]struct{}, write bool) {
 	_ = fi.Close()
 }
 
-func isDeath(originalMap map[string]struct{}) {
-	rwCache(originalMap, false)
-	
-	nowNum := len(originalMap)
-	
-	var group sync.WaitGroup
-	group.Add(nowNum)
-	
-	deathChan := make(chan string, nowNum)
-	
-	go handle(originalMap, &group, deathChan)
-	
-	group.Wait()
-	
-	deathMap := make(map[string]struct{})
-	
+func readChan(deathChan chan string) map[string]struct{} {
+	v := make(map[string]struct{})
 	timer := time.NewTimer(2 * time.Second)
 	for {
 		select {
 		case <-timer.C:
 			close(deathChan)
-			rwCache(deathMap, true)
-			return
+			return v
 		case uri := <-deathChan:
-			deathMap[uri] = struct{}{}
-			delete(originalMap, uri)
+			v[uri] = struct{}{}
 			timer.Reset(2 * time.Second)
 		}
 	}
+}
+
+func isDeath(originalMap map[string]struct{}) {
+	rwCache(originalMap, false)
+	
+	deathFirst := make(chan string, len(originalMap))
+	
+	handle(originalMap, deathFirst)
+	
+	deathFirstMap := readChan(deathFirst)
+	
+	deathSecond := make(chan string, len(deathFirstMap))
+	
+	handle(deathFirstMap, deathSecond)
+	
+	deathMap := readChan(deathSecond)
+	
+	rwCache(deathMap, true)
 }
 
 func isDeathList(originalMaps ...map[string]struct{}) {

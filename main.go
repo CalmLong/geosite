@@ -25,6 +25,12 @@ func command() {
 	if *death {
 		t := time.Now()
 		log.Printf("clear invalid domain names ...")
+		go func() {
+			for {
+				time.Sleep(1*time.Minute)
+				log.Println("processing ...")
+			}
+		}()
 		isDeathList(allowList, blockList, cnList)
 		log.Printf("done. %.2fm", time.Now().Sub(t).Minutes())
 	}
