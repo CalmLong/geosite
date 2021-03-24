@@ -31,7 +31,8 @@ func command() {
 }
 
 func main() {
-	// allowList always output full format
+	// always output full format
+	output(coverOnlyFull, localList)
 	output(coverOnlyFull, allowList)
 	
 	command()

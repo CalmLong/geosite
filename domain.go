@@ -11,6 +11,7 @@ import (
 
 func loadEntry() map[string]*List {
 	ref := make(map[string]*List)
+	ref[localTag] = getEntry(localTag, localList)
 	ref[allowTag] = getEntry(allowTag, allowList)
 	ref[blockTag] = getEntry(blockTag, blockList)
 	ref[cnTag] = getEntry(cnTag, cnList)
@@ -97,9 +98,6 @@ func init() {
 	
 	log.Println("init allow list ...")
 	Resolve(getBodyFromUrls(allowUrls), allowList)
-	for _, l := range localList {
-		allowList[l] = struct{}{}
-	}
 	
 	log.Println("init cn list ...")
 	Resolve(getBodyFromUrls(directUrls), cnList)

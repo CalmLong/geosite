@@ -18,11 +18,6 @@ const (
 )
 
 func removeSuffix(uri string) (string, bool) {
-	for _, l := range localList {
-		if strings.EqualFold(l, uri) {
-			return l, false
-		}
-	}
 	if strings.Contains(uri, "regexp:") {
 		return strings.ReplaceAll(uri, "regexp:", ""), false
 	}
@@ -127,26 +122,16 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 			newOrg = newOrg[strings.Index(newOrg, p)+1:]
 			newOrg = newOrg[:strings.Index(newOrg, p)]
 		}
-		// adblock
-		if strings.ContainsRune(newOrg, '^') {
-			// 子域名包含 * 的不会被解析
-			if strings.ContainsRune(newOrg, '*') {
-				continue
-			}
-			// 表达式不会被解析
-			if strings.Contains(newOrg, "/^") {
-				continue
-			}
-			// 允许名单不会被解析
-			if strings.ContainsRune(newOrg, '@') {
-				continue
-			}
-			newOrg = format(newOrg, "||", "^")
-		}
+		
 		newOrg = strings.TrimSpace(newOrg)
 		// 检测是否有端口号，有则移除端口号
 		if i := strings.IndexRune(newOrg, ':'); i != -1 {
 			newOrg = newOrg[:i]
+		}
+		
+		// 包含正则符号的
+		if strings.ContainsAny(newOrg, "$()*+[?\\^{|") {
+			continue
 		}
 		
 		if v, ok := parseUrl(newOrg); ok {

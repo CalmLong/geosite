@@ -1,6 +1,7 @@
 package main
 
 const (
+	localTag     = "local"
 	allowTag     = "allow"
 	blockTag     = "block"
 	cnTag        = "cn"
@@ -30,18 +31,17 @@ var (
 	blockList  = make(map[string]struct{})
 	cnList     = make(map[string]struct{})
 	suffixList = make(map[string]struct{})
+	localList  = map[string]struct{}{
+		"localhost":             {},
+		"ip6-localhost":         {},
+		"localhost.localdomain": {},
+		"local":                 {},
+		"broadcasthost":         {},
+		"ip6-loopback":          {},
+		"ip6-localnet":          {},
+		"ip6-mcastprefix":       {},
+		"ip6-allnodes":          {},
+		"ip6-allrouters":        {},
+		"ip6-allhosts":          {},
+	}
 )
-
-var localList = []string{
-	"localhost",
-	"ip6-localhost",
-	"localhost.localdomain",
-	"local",
-	"broadcasthost",
-	"ip6-loopback",
-	"ip6-localnet",
-	"ip6-mcastprefix",
-	"ip6-allnodes",
-	"ip6-allrouters",
-	"ip6-allhosts",
-}
