@@ -41,7 +41,7 @@ func request(domain string) int {
 
 func handle(originalMap map[string]struct{}, deathChan chan string) {
 	var group sync.WaitGroup
-	limit := make(chan struct{}, 500)
+	limit := make(chan struct{}, 1000)
 	
 	for uri := range originalMap {
 		
@@ -113,13 +113,11 @@ func readChan(deathChan chan string) map[string]struct{} {
 func isDeath(originalMap map[string]struct{}) {
 	rwCache(originalMap, false)
 	
-	deathFirst := make(chan string, len(originalMap))
+	deathChan := make(chan string, len(originalMap))
+	handle(originalMap, deathChan)
 	
-	handle(originalMap, deathFirst)
-	
-	deathFirstMap := readChan(deathFirst)
-	
-	rwCache(deathFirstMap, true)
+	deathMap := readChan(deathChan)
+	rwCache(deathMap, true)
 }
 
 func isDeathList(originalMaps ...map[string]struct{}) {
