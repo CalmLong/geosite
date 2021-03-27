@@ -31,7 +31,7 @@
 * `-D` 自动检测并移除无效域名
 
 使用本机 DNS 查询内置和外置域名列表内所有的域名，无返回 IP 时则移除；受 DNS 影响结果可能会有差异；
-此操作会增大创建时间(内置域名数据≤5分钟)
+此操作会增大创建时间(内置域名数据≤1分钟)
 
 ```bash
 ./geosite -D=true
@@ -67,7 +67,6 @@
 ## 引用以下项目
 
 * [github.com/v2fly/domain-list-community](https://github.com/v2fly/domain-list-community)
-* [github.com/AdguardTeam/dnsproxy](https://github.com/AdguardTeam/dnsproxy)
 
 内置域名数据：
 
