@@ -19,8 +19,8 @@
 
 所有参数默认为关闭状态
 
-* `-d` 强制外置域名输出 `full:` 格式
-* `-f` 强制外置域名输出 `domain:` 格式
+* `-f` 强制外置域名输出 `full:` 格式
+* `-d` 强制外置域名输出 `domain:` 格式
 
 ```bash
 # -d 和 -f 同为 true 时 -f 生效
@@ -47,7 +47,7 @@
           "geosite:allow"
         ],
         "outboundTag": "direct"
-      },      
+      },
       {
         "type": "field",
         "domain": [
