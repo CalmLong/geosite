@@ -2,37 +2,46 @@ package main
 
 import (
 	"bufio"
-	"github.com/AdguardTeam/dnsproxy/upstream"
-	"github.com/miekg/dns"
+	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
-	"net"
+	"net/http"
 	"os"
 	"sync"
 	"time"
 )
 
-func createHostTestMessage(host string) *dns.Msg {
-	req := dns.Msg{}
-	req.Id = dns.Id()
-	req.RecursionDesired = true
-	name := host + "."
-	req.Question = []dns.Question{
-		{Name: name, Qtype: dns.TypeA, Qclass: dns.ClassINET},
+const (
+	success = 0
+	noRet   = 3
+)
+
+type aa struct {
+	Status int32 `json:"Status"`
+}
+
+func request(domain string) int {
+	domain = fmt.Sprintf("https://dns.google/resolve?name=%s", domain)
+	resp, err := http.Get(domain)
+	if err != nil {
+		return success
 	}
-	return &req
+	body, _ := ioutil.ReadAll(resp.Body)
+	var ret aa
+	if err := json.Unmarshal(body, &ret); err != nil {
+		return success
+	}
+	if ret.Status == 3 {
+		return noRet
+	}
+	return success
 }
 
 func handle(originalMap map[string]struct{}, deathChan chan string) {
-	address := "tls://8.8.8.8:853"
-	doq, err := upstream.AddressToUpstream(address, upstream.Options{})
-	
-	if err != nil {
-		panic(err)
-	}
-	
 	var group sync.WaitGroup
-	limit := make(chan struct{}, 1000)
+	limit := make(chan struct{}, 500)
 	
 	for uri := range originalMap {
 		
@@ -42,21 +51,10 @@ func handle(originalMap map[string]struct{}, deathChan chan string) {
 		
 		go func(uri string, limit chan struct{}) {
 			if uriStr, ok := removeSuffix(uri); ok {
-				
-				msg, err := doq.Exchange(createHostTestMessage(uriStr))
-				if err == nil {
-					if msg.Answer == nil || len(msg.Answer) <= 0 {
-						deathChan <- uri
-					} else {
-						if a, ok := msg.Answer[0].(*dns.A); ok {
-							if net.IPv4(0, 0, 0, 0).Equal(a.A) {
-								deathChan <- uri
-							}
-						}
-					}
+				if request(uriStr) == noRet {
+					deathChan <- uri
 				}
 			}
-			
 			group.Done()
 			<-limit
 		}(uri, limit)
@@ -121,13 +119,7 @@ func isDeath(originalMap map[string]struct{}) {
 	
 	deathFirstMap := readChan(deathFirst)
 	
-	deathSecond := make(chan string, len(deathFirstMap))
-	
-	handle(deathFirstMap, deathSecond)
-	
-	deathMap := readChan(deathSecond)
-	
-	rwCache(deathMap, true)
+	rwCache(deathFirstMap, true)
 }
 
 func isDeathList(originalMaps ...map[string]struct{}) {
