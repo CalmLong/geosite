@@ -5,9 +5,49 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 )
+
+func load2Format(format string, domainList map[string]struct{}) {
+	f := strings.Split(format, ";")
+	if len(f) != 4 {
+		log.Fatalln("format err: ", format)
+	}
+	fi, err := os.Create("cn.txt")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	buff := bufio.NewWriter(fi)
+	for k := range domainList {
+		if strings.Contains(k, suffixFull) {
+			delete(domainList, k)
+			k = replace(k, suffixFull, f[0], f[1]) + "\n"
+			if _, err := buff.WriteString(k); err != nil {
+				log.Fatalln(err)
+			}
+			continue
+		}
+		if strings.Contains(k, suffixDomain) {
+			delete(domainList, k)
+			k = replace(k, suffixDomain, f[2], f[3]) + "\n"
+			if _, err := buff.WriteString(k); err != nil {
+				log.Fatalln(err)
+			}
+			continue
+		}
+	}
+	if err := buff.Flush(); err != nil {
+		log.Fatalln(err)
+	}
+	if err := fi.Chmod(os.ModePerm); err != nil {
+		log.Fatalln(err)
+	}
+	if err := fi.Close(); err != nil {
+		log.Fatalln(err)
+	}
+}
 
 func loadEntry() map[string]*List {
 	ref := make(map[string]*List)

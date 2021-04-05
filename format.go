@@ -17,6 +17,14 @@ const (
 	coverOnlyFull   = 2
 )
 
+func replace(s, old string, new ...string) string {
+	s = strings.TrimPrefix(s, old)
+	if len(new) >= 2 {
+		return new[0] + s + new[1]
+	}
+	return s
+}
+
 func removeSuffix(uri string) (string, bool) {
 	if strings.Contains(uri, "regexp:") {
 		return strings.ReplaceAll(uri, "regexp:", ""), false
