@@ -55,6 +55,7 @@ func loadEntry() map[string]*List {
 	ref[allowTag] = getEntry(allowTag, allowList)
 	ref[blockTag] = getEntry(blockTag, blockList)
 	ref[cnTag] = getEntry(cnTag, cnList)
+	ref[proxyTag] = getEntry(proxyTag, proxyList)
 	return ref
 }
 
@@ -130,7 +131,7 @@ func init() {
 	} else {
 		log.Println("init ads list ...")
 		Resolve(getBodyFromUrls(block), blockList)
-		Resolve(getBodyFromUrls([]string{domainListAdsAllRaw}), blockList)
+		ResolveV2Ray(getBodyFromUrls([]string{domainListAdsAllRaw}), blockList)
 	}
 	
 	log.Println("init suffix list ...")
@@ -141,5 +142,8 @@ func init() {
 	
 	log.Println("init cn list ...")
 	Resolve(getBodyFromUrls(directUrls), cnList)
-	Resolve(getBodyFromUrls([]string{domainListCnRaw}), cnList)
+	ResolveV2Ray(getBodyFromUrls([]string{domainListCnRaw}), cnList)
+	
+	log.Println("init proxy list ...")
+	ResolveV2Ray(getBodyFromUrls([]string{domainListNotCn}), proxyList)
 }

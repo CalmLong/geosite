@@ -5,6 +5,7 @@ const (
 	allowTag     = "allow"
 	blockTag     = "block"
 	cnTag        = "cn"
+	proxyTag     = "proxy"
 	suffixFull   = "full:"
 	suffixDomain = "domain:"
 )
@@ -23,6 +24,7 @@ var directUrls = []string{
 const (
 	domainListCnRaw     = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/cn.txt"
 	domainListAdsAllRaw = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/category-ads-all.txt"
+	domainListNotCn     = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/geolocation-!cn.txt"
 	suffixListRaw       = "https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat"
 )
 
@@ -30,6 +32,7 @@ var (
 	allowList  = make(map[string]struct{})
 	blockList  = make(map[string]struct{})
 	cnList     = make(map[string]struct{})
+	proxyList  = make(map[string]struct{})
 	suffixList = make(map[string]struct{})
 	localList  = map[string]struct{}{
 		"localhost":             {},
