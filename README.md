@@ -70,6 +70,13 @@
       {
         "type": "field",
         "domain": [
+          "geosite:proxy"
+        ],
+        "outboundTag": "proxy"
+      },  
+      {
+        "type": "field",
+        "domain": [
           "geosite:cn"
         ],
         "outboundTag": "direct"
