@@ -37,7 +37,7 @@ func command() {
 				log.Println("processing ...")
 			}
 		}()
-		isDeathList(allowList, blockList, cnList)
+		isDeathList(blockList)
 		log.Printf("done. %.2fm", time.Now().Sub(t).Minutes())
 	}
 	
@@ -64,7 +64,6 @@ func v2rayGeoSite() {
 		}
 		protoList.Entry = append(protoList.Entry, site)
 	}
-	
 	protoBytes, err := proto.Marshal(protoList)
 	if err != nil {
 		log.Fatalln("Failed: ", err)
