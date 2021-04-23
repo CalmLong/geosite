@@ -3,7 +3,7 @@ name: Output geosite.dat
 on:
   workflow_dispatch:
   schedule:
-    - cron: "00 02 * * *"
+    - cron: "00 18 * * *"
   push:
     branches:
       - master
