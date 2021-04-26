@@ -12,8 +12,10 @@
 
 * 可识别 `https_proxy` 环境变量
 
-程序运行时自动加载同级目录中名为 `block.txt` 的文件，内容为域名列表的 URL (参考 [block.txt](block.txt)) 用于 `block` 标签
-，请确保该文件存在
+> 程序运行时自动加载同级目录中名为 `block.txt` 的文件，内容为域名列表的 URL (参考 [block.txt](block.txt)) 用于 `block` 标签
+> ，请确保该文件存在
+
+现在可以通过 [release](https://github.com/CalmLong/geosite/tree/release) 分支下载已经输出的文件，由 Github Action 每日 UTC+08:00 2 点自动构建
 
 ### 命令参数
 
