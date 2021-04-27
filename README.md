@@ -91,9 +91,9 @@
 
 内置域名数据：
 
-* [github.com/CalmLong/whitelist](https://github.com/CalmLong/whitelist) `allow`
-* [github.com/privacy-protection-tools/dead-horse](https://github.com/privacy-protection-tools/dead-horse) `allow`
-* [github.com/felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) `cn`
+* [github.com/CalmLong/domain-list](https://github.com/CalmLong/domain-list)
+* [github.com/privacy-protection-tools/dead-horse](https://github.com/privacy-protection-tools/dead-horse)
+* [github.com/felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list)
 * [github.com/publicsuffix/list](https://github.com/publicsuffix/list)
 
 仅用于测试：
