@@ -131,7 +131,7 @@ func init() {
 	} else {
 		log.Println("init ads list ...")
 		Resolve(getBodyFromUrls(block), blockList)
-		ResolveV2Ray(getBodyFromUrls([]string{domainListAdsAllRaw}), blockList)
+		ResolveV2Ray(getBodyFromUrls(blockUrlsForV2Ray), blockList)
 	}
 	
 	log.Println("init suffix list ...")
