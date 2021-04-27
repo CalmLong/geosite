@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -10,43 +12,68 @@ import (
 	"strings"
 )
 
-func load2Format(format string, domainList map[string]struct{}) {
+func pickWriter(header []string, name string, items ...map[string]struct{}) error {
+	buff := bytes.NewBuffer([]byte{})
+	for _, h := range header {
+		buff.WriteString(h)
+	}
+	for _, item := range items {
+		for s := range item {
+			buff.WriteString(s)
+		}
+	}
+	return ioutil.WriteFile(name, buff.Bytes(), os.ModePerm)
+}
+
+func autoPick(f string) {
+	switch f {
+	case "clash":
+		const clash = "  - DOMAIN,;;  - DOMAIN-SUFFIX,;"
+
+		block := load2Format(clash, blockList)
+		cn := load2Format(clash, cnList)
+		proxy := load2Format(clash, proxyList)
+
+		header := []string{"payload:", "\n"}
+
+		if err := pickWriter(header, "block.yaml", block); err != nil {
+			log.Fatalln(err)
+		}
+		if err := pickWriter(header, "cn.yaml", cn); err != nil {
+			log.Fatalln(err)
+		}
+		if err := pickWriter(header, "proxy.yaml", proxy); err != nil {
+			log.Fatalln(err)
+		}
+
+		log.Println("geodata has been generated successfully.")
+	default:
+		log.Fatalf("unsupported %s", f)
+	}
+}
+
+func load2Format(format string, domainList map[string]struct{}) map[string]struct{} {
 	f := strings.Split(format, ";")
 	if len(f) != 4 {
 		log.Fatalln("format err: ", format)
 	}
-	fi, err := os.Create("cn.txt")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	buff := bufio.NewWriter(fi)
+
+	buff := make(map[string]struct{})
 	for k := range domainList {
 		if strings.Contains(k, suffixFull) {
 			delete(domainList, k)
 			k = replace(k, suffixFull, f[0], f[1]) + "\n"
-			if _, err := buff.WriteString(k); err != nil {
-				log.Fatalln(err)
-			}
+			buff[k] = struct{}{}
 			continue
 		}
 		if strings.Contains(k, suffixDomain) {
 			delete(domainList, k)
 			k = replace(k, suffixDomain, f[2], f[3]) + "\n"
-			if _, err := buff.WriteString(k); err != nil {
-				log.Fatalln(err)
-			}
+			buff[k] = struct{}{}
 			continue
 		}
 	}
-	if err := buff.Flush(); err != nil {
-		log.Fatalln(err)
-	}
-	if err := fi.Chmod(os.ModePerm); err != nil {
-		log.Fatalln(err)
-	}
-	if err := fi.Close(); err != nil {
-		log.Fatalln(err)
-	}
+	return buff
 }
 
 func loadEntry() map[string]*List {
@@ -63,7 +90,7 @@ func getEntry(name string, value map[string]struct{}) *List {
 	full := make([]string, 0)
 	domain := make([]string, 0)
 	other := make([]string, 0)
-	
+
 	for k := range value {
 		if strings.Contains(k, suffixFull) {
 			full = append(full, k)
@@ -75,18 +102,18 @@ func getEntry(name string, value map[string]struct{}) *List {
 		}
 		other = append(other, k)
 	}
-	
+
 	sort.Strings(full)
 	sort.Strings(domain)
 	sort.Strings(other)
-	
+
 	lines := make([]string, 0)
 	lines = append(append(full, domain...), other...)
-	
+
 	list := &List{
 		Name: name,
 	}
-	
+
 	for _, line := range lines {
 		entry, err := parseEntry(line)
 		if err != nil {
@@ -133,17 +160,17 @@ func init() {
 		Resolve(getBodyFromUrls(block), blockList)
 		ResolveV2Ray(getBodyFromUrls(blockUrlsForV2Ray), blockList)
 	}
-	
+
 	log.Println("init suffix list ...")
 	initSuffix(suffixListRaw)
-	
+
 	log.Println("init allow list ...")
 	Resolve(getBodyFromUrls(allowUrls), allowList)
-	
+
 	log.Println("init cn list ...")
 	Resolve(getBodyFromUrls(directUrls), cnList)
 	ResolveV2Ray(getBodyFromUrls([]string{domainListCnRaw}), cnList)
-	
+
 	log.Println("init proxy list ...")
 	ResolveV2Ray(getBodyFromUrls([]string{domainListNotCn}), proxyList)
 }

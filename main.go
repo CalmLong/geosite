@@ -6,18 +6,18 @@ import (
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"io/ioutil"
 	"log"
+	"strings"
 	"time"
 )
 
-var otherPut bool
+var F string
 
 func command() {
 	onlyDomain := flag.Bool("d", false, "only output domain: domains")
 	onlyFull := flag.Bool("f", false, "only output full: domains")
 	death := flag.Bool("D", false, "detect and remove invalid domain names")
 	
-	outCn := flag.Bool("cn", false, "if you use -F, output in the format")
-	format := flag.String("F", "", "format output")
+	fF := flag.String("F", "", "format output")
 	
 	flag.Parse()
 	if *onlyDomain {
@@ -40,11 +40,7 @@ func command() {
 		isDeathList(blockList)
 		log.Printf("done. %.2fm", time.Now().Sub(t).Minutes())
 	}
-	
-	if *outCn {
-		otherPut = true
-		load2Format(*format, cnList)
-	}
+	F = *fF
 }
 
 func v2rayGeoSite() {
@@ -82,10 +78,10 @@ func main() {
 	output(coverOnlyFull, allowList)
 	
 	command()
-	
 
-	if !otherPut {
+	if strings.TrimSpace(F) != "" {
+		autoPick(F)
+	} else {
 		v2rayGeoSite()
-		return
 	}
 }
