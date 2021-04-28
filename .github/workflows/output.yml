@@ -31,22 +31,34 @@ jobs:
 
       - name: Build geosite.dat file
         run: |
-          curl -L https://gist.githubusercontent.com/CalmLong/ac743d4bb1e16c9eff54e70ff2ecc4c6/raw/c4ea8f77ca338d342a3e1611aab4e3e78eefd533/gistfile1.txt -o block.txt
+          curl -L https://raw.githubusercontent.com/CalmLong/custom-block/main/block.txt -o block.txt
           
-          mkdir -p ./publish/default
+          mkdir -p ./publish/v2ray/default
           go run geosite -D=true
-          mv geosite.dat ./publish/default
+          mv geosite.dat ./publish/v2ray/default
           
-          mkdir -p ./publish/full
+          mkdir -p ./publish/v2ray/full
           go run geosite -D=true -f=true
-          mv geosite.dat ./publish/full
+          mv geosite.dat ./publish/v2ray/full
           
-          mkdir -p ./publish/domain
+          mkdir -p ./publish/v2ray/domain
           go run geosite -D=true -d=true
-          mv geosite.dat ./publish/domain
+          mv geosite.dat ./publish/v2ray/domain
           
-          mv block.txt ./publish
-  
+          cp block.txt ./publish/v2ray/
+
+      - name: Build clash.yaml file
+        run: |
+          mkdir -p ./publish/clash/
+          go run geosite -D=true -F=clash
+          mv *.yaml ./publish/clash/
+
+          cp block.txt ./publish/clash/
+
+      - name: Clear
+        run: |
+          rm block.txt
+
       - name: Git push assets to "release" branch
         run: |
           cd publish || exit 1
