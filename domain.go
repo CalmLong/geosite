@@ -10,6 +10,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 )
 
 func pickWriter(header []string, name string, items ...map[string]struct{}) error {
@@ -26,16 +27,17 @@ func pickWriter(header []string, name string, items ...map[string]struct{}) erro
 }
 
 func autoPick(f string) {
+	t := time.Now().Format("2006-01-02 15:04:05")
 	switch f {
 	case "clash":
-		const clash = "  - DOMAIN,;;  - DOMAIN-SUFFIX,;"
-
-		block := load2Format(clash, blockList)
-		cn := load2Format(clash, cnList)
-		proxy := load2Format(clash, proxyList)
-
-		header := []string{"payload:", "\n"}
-
+		const rule = "  - DOMAIN,;;  - DOMAIN-SUFFIX,;"
+		
+		block := load2Format(rule, blockList)
+		cn := load2Format(rule, cnList)
+		proxy := load2Format(rule, proxyList)
+		
+		header := []string{"# TIME: ", t, "\n", "payload:", "\n"}
+		
 		if err := pickWriter(header, "block.yaml", block); err != nil {
 			log.Fatalln(err)
 		}
@@ -45,8 +47,7 @@ func autoPick(f string) {
 		if err := pickWriter(header, "proxy.yaml", proxy); err != nil {
 			log.Fatalln(err)
 		}
-
-		log.Println("geodata has been generated successfully.")
+		log.Println("clash.yaml has been generated successfully.")
 	default:
 		log.Fatalf("unsupported %s", f)
 	}
@@ -57,7 +58,7 @@ func load2Format(format string, domainList map[string]struct{}) map[string]struc
 	if len(f) != 4 {
 		log.Fatalln("format err: ", format)
 	}
-
+	
 	buff := make(map[string]struct{})
 	for k := range domainList {
 		if strings.Contains(k, suffixFull) {
@@ -90,7 +91,7 @@ func getEntry(name string, value map[string]struct{}) *List {
 	full := make([]string, 0)
 	domain := make([]string, 0)
 	other := make([]string, 0)
-
+	
 	for k := range value {
 		if strings.Contains(k, suffixFull) {
 			full = append(full, k)
@@ -102,18 +103,18 @@ func getEntry(name string, value map[string]struct{}) *List {
 		}
 		other = append(other, k)
 	}
-
+	
 	sort.Strings(full)
 	sort.Strings(domain)
 	sort.Strings(other)
-
+	
 	lines := make([]string, 0)
 	lines = append(append(full, domain...), other...)
-
+	
 	list := &List{
 		Name: name,
 	}
-
+	
 	for _, line := range lines {
 		entry, err := parseEntry(line)
 		if err != nil {
@@ -160,17 +161,17 @@ func init() {
 		Resolve(getBodyFromUrls(block), blockList)
 		ResolveV2Ray(getBodyFromUrls(blockUrlsForV2Ray), blockList)
 	}
-
+	
 	log.Println("init suffix list ...")
 	initSuffix(suffixListRaw)
-
+	
 	log.Println("init allow list ...")
 	Resolve(getBodyFromUrls(allowUrls), allowList)
-
+	
 	log.Println("init cn list ...")
 	Resolve(getBodyFromUrls(directUrls), cnList)
 	ResolveV2Ray(getBodyFromUrls([]string{domainListCnRaw}), cnList)
-
+	
 	log.Println("init proxy list ...")
 	ResolveV2Ray(getBodyFromUrls([]string{domainListNotCn}), proxyList)
 }
