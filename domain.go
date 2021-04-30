@@ -170,8 +170,8 @@ func init() {
 	
 	log.Println("init cn list ...")
 	Resolve(getBodyFromUrls(directUrls), cnList)
-	ResolveV2Ray(getBodyFromUrls([]string{domainListCnRaw}), cnList)
+	ResolveV2Ray(getBodyFromUrls(directUrlsForV2Ray), cnList)
 	
 	log.Println("init proxy list ...")
-	ResolveV2Ray(getBodyFromUrls([]string{domainListNotCn}), proxyList)
+	ResolveV2Ray(getBodyFromUrls([]string{v2rayNotCn}), proxyList)
 }

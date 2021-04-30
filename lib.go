@@ -26,10 +26,14 @@ var blockUrlsForV2Ray = []string{
 	"https://raw.githubusercontent.com/v2fly/domain-list-community/release/category-ads-all.txt",
 }
 
+var directUrlsForV2Ray = []string{
+	"https://raw.githubusercontent.com/v2fly/domain-list-community/release/cn.txt",
+	"https://raw.githubusercontent.com/CalmLong/domain-list/master/cn.txt",
+}
+
 const (
-	domainListCnRaw     = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/cn.txt"
-	domainListNotCn     = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/geolocation-!cn.txt"
-	suffixListRaw       = "https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat"
+	v2rayNotCn    = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/geolocation-!cn.txt"
+	suffixListRaw = "https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat"
 )
 
 var (
