@@ -3,7 +3,7 @@ package main
 const (
 	localTag     = "local"
 	allowTag     = "allow"
-	blockTag     = "block"
+	blockTag     = "category-ads-all"
 	cnTag        = "cn"
 	proxyTag     = "proxy"
 	suffixFull   = "full:"

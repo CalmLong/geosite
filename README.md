@@ -55,7 +55,7 @@
       {
         "type": "field",
         "domain": [
-          "geosite:block"
+          "geosite:category-ads-all"
         ],
         "outboundTag": "block"
       },
