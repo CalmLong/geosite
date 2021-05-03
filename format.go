@@ -182,6 +182,9 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 		if strings.IndexRune(urlString, '.') == 0 {
 			urlString = urlString[1:]
 		}
+		if urlString == "" {
+			continue
+		}
 		if uri, ok := toV2Ray(urlString, coverDefault); ok {
 			dst[uri] = struct{}{}
 		}
