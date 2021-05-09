@@ -1,13 +1,11 @@
 package main
 
+import "github.com/v2fly/v2ray-core/v4/app/router"
+
 const (
-	localTag     = "local"
-	allowTag     = "allow"
-	blockTag     = "category-ads-all"
-	cnTag        = "cn"
-	proxyTag     = "proxy"
-	suffixFull   = "full:"
-	suffixDomain = "domain:"
+	adsTag   = "category-ads-all"
+	cnTag    = "cn"
+	proxyTag = "geolocation-!cn"
 )
 
 var allowUrls = []string{
@@ -36,23 +34,17 @@ const (
 	suffixListRaw = "https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat"
 )
 
+type dT struct {
+	Value  string
+	Format string
+	Keep   bool
+	Type   router.Domain_Type
+}
+
 var (
-	allowList  = make(map[string]struct{})
-	blockList  = make(map[string]struct{})
-	cnList     = make(map[string]struct{})
-	proxyList  = make(map[string]struct{})
+	allowList  = make(map[string]dT)
+	blockList  = make(map[string]dT)
+	cnList     = make(map[string]dT)
+	proxyList  = make(map[string]dT)
 	suffixList = make(map[string]struct{})
-	localList  = map[string]struct{}{
-		"localhost":             {},
-		"ip6-localhost":         {},
-		"localhost.localdomain": {},
-		"local":                 {},
-		"broadcasthost":         {},
-		"ip6-loopback":          {},
-		"ip6-localnet":          {},
-		"ip6-mcastprefix":       {},
-		"ip6-allnodes":          {},
-		"ip6-allrouters":        {},
-		"ip6-allhosts":          {},
-	}
 )

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/v2fly/v2ray-core/v4/app/router"
 	"net"
 	"net/url"
 	"strings"
@@ -11,58 +12,28 @@ const (
 	p = "/"
 )
 
-const (
-	coverDefault    = 0
-	coverOnlyDomain = 1
-	coverOnlyFull   = 2
-)
-
-func replace(s, old string, new ...string) string {
-	s = strings.TrimPrefix(s, old)
-	if len(new) >= 2 {
-		return new[0] + s + new[1]
+func isFullDomain(uri string) router.Domain_Type {
+	if strings.Contains(uri, "domain:") {
+		return router.Domain_Domain
 	}
-	return s
-}
-
-func removeSuffix(uri string) (string, bool) {
 	if strings.Contains(uri, "regexp:") {
-		return strings.ReplaceAll(uri, "regexp:", ""), false
+		return router.Domain_Regex
 	}
-	if strings.Contains(uri, "keyword:") {
-		return strings.ReplaceAll(uri, "keyword:", ""), false
+	if strings.Contains(uri, "full:") {
+		return router.Domain_Full
 	}
-	uri = strings.ReplaceAll(uri, suffixFull, "")
-	uri = strings.ReplaceAll(uri, suffixDomain, "")
-	return uri, true
-}
-
-func toV2Ray(uri string, action int) (string, bool) {
-	if err := net.ParseIP(uri); err != nil {
-		return "", false
-	}
-	uri, _ = removeSuffix(uri)
-	switch action {
-	case coverOnlyDomain:
-		return "domain:" + uri, true
-	case coverOnlyFull:
-		return "full:" + uri, true
-	case coverDefault:
-		switch strings.Count(uri, ".") {
-		case 1:
-			return "domain:" + uri, true
-		case 2:
-			for suffix := range suffixList {
-				if strings.Contains(uri, suffix) {
-					return "domain:" + uri, true
-				}
+	switch strings.Count(uri, ".") {
+	case 1:
+		return router.Domain_Domain
+	case 2:
+		for suffix := range suffixList {
+			if strings.Contains(uri, suffix) {
+				return router.Domain_Domain
 			}
-			fallthrough
-		default:
-			return "full:" + uri, true
 		}
+		fallthrough
 	default:
-		return "", false
+		return router.Domain_Full
 	}
 }
 
@@ -78,7 +49,7 @@ func parseUrl(raw string) (string, bool) {
 	raw = strings.ReplaceAll(raw, "https://", "")
 	raw = strings.ReplaceAll(raw, "ftp://", "")
 	raw = strings.ReplaceAll(raw, "websocket://", "")
-	
+
 	switch strings.Count(raw, "/") {
 	case 0:
 		return raw, true
@@ -89,21 +60,33 @@ func parseUrl(raw string) (string, bool) {
 	}
 }
 
-func ResolveV2Ray(src, dst map[string]struct{}) {
+func ResolveV2Ray(src map[string]struct{}, dst map[string]dT) {
 	for k := range src {
+		if strings.Contains(k, "#") {
+			continue
+		}
 		ks := strings.Split(k, ":")
+		dt := dT{
+			Value:  ks[1],
+			Format: k,
+			Keep:   true,
+			Type:   isFullDomain(k),
+		}
 		switch len(ks) {
 		case 2:
-			dst[k] = struct{}{}
+			dst[ks[1]] = dt
 		case 3:
-			k = ks[0] + ":" + ks[1]
+			k = ks[1]
+			dt.Value = k
+			dt.Format = ks[0] + ":" + ks[1]
+			dt.Type = isFullDomain(dt.Format)
 			switch ks[2] {
 			case "@cn":
-				cnList[k] = struct{}{}
+				cnList[k] = dt
 			case "@ads":
-				blockList[k] = struct{}{}
+				blockList[k] = dt
 			default:
-				dst[k] = struct{}{}
+				dst[k] = dt
 			}
 		default:
 			continue
@@ -111,7 +94,7 @@ func ResolveV2Ray(src, dst map[string]struct{}) {
 	}
 }
 
-func Resolve(src map[string]struct{}, dst map[string]struct{}) {
+func Resolve(src map[string]struct{}, dst map[string]dT) {
 	for k := range src {
 		original := k
 		// 第一个字符为 # 或 ! 时跳过
@@ -126,18 +109,18 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 		if strings.ContainsRune(original, '\t') {
 			original = strings.ReplaceAll(original, "\t", " ")
 		}
-		
+
 		newOrg := strings.ToLower(original)
-		
+
 		// 移除前缀为 0.0.0.0 或者 127.0.0.1 (移除第一个空格前的内容)
 		index := strings.IndexRune(newOrg, ' ')
 		if index > -1 {
 			newOrg = strings.ReplaceAll(newOrg, newOrg[:index], "")
 		}
-		
+
 		// V2Ray
 		newOrg = format(newOrg, "domain:", "full:", "regexp:", "keyword:", ":@ads")
-		
+
 		// 移除行中的空格
 		newOrg = strings.TrimSpace(newOrg)
 		// 再一次验证第一个字符为 # 时跳过
@@ -152,24 +135,24 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 			newOrg = newOrg[strings.Index(newOrg, p)+1:]
 			newOrg = newOrg[:strings.Index(newOrg, p)]
 		}
-		
+
 		newOrg = strings.TrimSpace(newOrg)
 		// 检测是否有端口号，有则移除端口号
 		if i := strings.IndexRune(newOrg, ':'); i != -1 {
 			newOrg = newOrg[:i]
 		}
-		
+
 		// 包含正则符号的
 		if strings.ContainsAny(newOrg, "$()*+[?\\^{|") {
 			continue
 		}
-		
+
 		if v, ok := parseUrl(newOrg); ok {
 			newOrg = v
 		} else {
 			continue
 		}
-		
+
 		urlStr, err := url.Parse(newOrg)
 		if err != nil {
 			continue
@@ -185,8 +168,10 @@ func Resolve(src map[string]struct{}, dst map[string]struct{}) {
 		if urlString == "" {
 			continue
 		}
-		if uri, ok := toV2Ray(urlString, coverDefault); ok {
-			dst[uri] = struct{}{}
+
+		dst[urlString] = dT{
+			Value: urlString,
+			Type:  isFullDomain(urlString),
 		}
 	}
 }

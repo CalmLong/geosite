@@ -2,125 +2,53 @@ package main
 
 import (
 	"bufio"
-	"bytes"
+	"github.com/v2fly/v2ray-core/v4/app/router"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
-	"time"
 )
-
-func dict2Slice(itemMap map[string]struct{}) []string {
-	item := make([]string, 0)
-	for t := range itemMap {
-		item = append(item, t)
-	}
-	sort.Strings(item)
-	return item
-}
-
-func pickWriter(header []string, name string, items ...[]string) error {
-	buff := bytes.NewBuffer([]byte{})
-	for _, h := range header {
-		buff.WriteString(h)
-	}
-	for _, item := range items {
-		for _, s := range item {
-			buff.WriteString(s)
-		}
-	}
-	return ioutil.WriteFile(name, buff.Bytes(), os.ModePerm)
-}
-
-func autoPick(f string) {
-	t := time.Now().Format("2006-01-02 15:04:05")
-	switch f {
-	case "clash":
-		const rule = "  - DOMAIN,;;  - DOMAIN-SUFFIX,;"
-
-		blockFull, blockDomain := load2Format(rule, blockList)
-		cnFull, cnDomain := load2Format(rule, cnList)
-		proxyFull, proxyDomain := load2Format(rule, proxyList)
-
-		header := []string{"# TIME: ", t, "\n", "payload:", "\n"}
-
-		if err := pickWriter(header, "block.yaml", blockFull, blockDomain); err != nil {
-			log.Fatalln(err)
-		}
-		if err := pickWriter(header, "cn.yaml", cnFull, cnDomain); err != nil {
-			log.Fatalln(err)
-		}
-		if err := pickWriter(header, "proxy.yaml", proxyFull, proxyDomain); err != nil {
-			log.Fatalln(err)
-		}
-		log.Println("clash.yaml has been generated successfully.")
-	default:
-		log.Fatalf("unsupported %s", f)
-	}
-}
-
-func load2Format(format string, domainList map[string]struct{}) ([]string, []string) {
-	f := strings.Split(format, ";")
-	if len(f) != 4 {
-		log.Fatalln("format err: ", format)
-	}
-
-	full := make(map[string]struct{})
-	domain := make(map[string]struct{})
-	for k := range domainList {
-		if strings.Contains(k, suffixFull) {
-			delete(domainList, k)
-			k = replace(k, suffixFull, f[0], f[1]) + "\n"
-			full[k] = struct{}{}
-			continue
-		}
-		if strings.Contains(k, suffixDomain) {
-			delete(domainList, k)
-			k = replace(k, suffixDomain, f[2], f[3]) + "\n"
-			domain[k] = struct{}{}
-			continue
-		}
-	}
-
-	return dict2Slice(full), dict2Slice(domain)
-}
 
 func loadEntry() map[string]*List {
 	ref := make(map[string]*List)
-	ref[localTag] = getEntry(localTag, localList)
-	ref[allowTag] = getEntry(allowTag, allowList)
-	ref[blockTag] = getEntry(blockTag, blockList)
+	ref[adsTag] = getEntry(adsTag, blockList)
 	ref[cnTag] = getEntry(cnTag, cnList)
 	ref[proxyTag] = getEntry(proxyTag, proxyList)
 	return ref
 }
 
-func getEntry(name string, value map[string]struct{}) *List {
+func getEntry(name string, value map[string]dT) *List {
 	full := make([]string, 0)
 	domain := make([]string, 0)
-	other := make([]string, 0)
-
-	for k := range value {
-		if strings.Contains(k, suffixFull) {
-			full = append(full, k)
-			continue
+	regex := make([]string, 0)
+	for _, vv := range value {
+		if vv.Keep {
+			switch vv.Type {
+			case router.Domain_Regex:
+				regex = append(regex, vv.Format)
+			case router.Domain_Domain:
+				domain = append(domain, vv.Format)
+			case router.Domain_Full:
+				full = append(full, vv.Format)
+			}
+		} else {
+			switch vv.Type {
+			case router.Domain_Regex:
+				regex = append(regex, strings.ToLower(router.Domain_Regex.String())+":"+vv.Value)
+			case router.Domain_Domain:
+				domain = append(domain, strings.ToLower(router.Domain_Domain.String())+":"+vv.Value)
+			case router.Domain_Full:
+				full = append(full, strings.ToLower(router.Domain_Full.String())+":"+vv.Value)
+			}
 		}
-		if strings.Contains(k, suffixDomain) {
-			domain = append(domain, k)
-			continue
-		}
-		other = append(other, k)
 	}
 
 	sort.Strings(full)
 	sort.Strings(domain)
-	sort.Strings(other)
 
 	lines := make([]string, 0)
-	lines = append(append(full, domain...), other...)
+	lines = append(append(full, domain...), regex...)
 
 	list := &List{
 		Name: name,
@@ -178,6 +106,13 @@ func init() {
 
 	log.Println("init allow list ...")
 	Resolve(getBodyFromUrls(allowUrls), allowList)
+	for ak, av := range allowList {
+		if bv, ok := blockList[ak]; ok {
+			if (bv.Type == router.Domain_Domain && av.Type == router.Domain_Domain) || bv.Type == router.Domain_Full && av.Type == router.Domain_Full {
+				delete(blockList, ak)
+			}
+		}
+	}
 
 	log.Println("init cn list ...")
 	Resolve(getBodyFromUrls(directUrls), cnList)

@@ -19,17 +19,6 @@
 
 ### 命令参数
 
-所有参数默认为关闭状态
-
-* `-f` 强制外置域名输出 `full:` 格式
-* `-d` 强制外置域名输出 `domain:` 格式
-
-```bash
-# -d 和 -f 同为 true 时 -f 生效
-# 两者未指定时或都为 false 时则根据域名自动处理格式
-./geosite -f=true
-```
-
 * `-D` 自动检测并移除无效域名
 
 使用 [Google DoH](https://dns.google) 查询所有域名，状态码为 `3` 时即为无效域名；
@@ -38,41 +27,35 @@
 ```bash
 ./geosite -D=true
 ```
-* `-F` 按应用程序输出格式
-    * `clash`
 
 ### 配置示例
 
 ```json
-      {
-        "type": "field",
-        "domain": [
-          "geosite:local",
-          "geosite:allow"
-        ],
-        "outboundTag": "direct"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "geosite:category-ads-all"
-        ],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "geosite:proxy"
-        ],
-        "outboundTag": "proxy"
-      },  
-      {
-        "type": "field",
-        "domain": [
-          "geosite:cn"
-        ],
-        "outboundTag": "direct"
-      }
+{
+  "rules": [
+    {
+      "type": "field",
+      "domain": [
+        "geosite:category-ads-all"
+      ],
+      "outboundTag": "block"
+    },
+    {
+      "type": "field",
+      "domain": [
+        "geosite:cn"
+      ],
+      "outboundTag": "direct"
+    },
+    {
+      "type": "field",
+      "domain": [
+        "geosite:geolocation-!cn"
+      ],
+      "outboundTag": "proxy"
+    }
+  ]
+}
 ```
 
 ## 引用以下项目

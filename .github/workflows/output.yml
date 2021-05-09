@@ -33,31 +33,10 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/CalmLong/custom-block/main/block.txt -o block.txt
           
-          mkdir -p ./publish/v2ray/default
+          mkdir -p ./publish/v2ray/
           go run geosite -D=true
-          mv geosite.dat ./publish/v2ray/default
-          
-          mkdir -p ./publish/v2ray/full
-          go run geosite -D=true -f=true
-          mv geosite.dat ./publish/v2ray/full
-          
-          mkdir -p ./publish/v2ray/domain
-          go run geosite -D=true -d=true
-          mv geosite.dat ./publish/v2ray/domain
-          
-          cp block.txt ./publish/v2ray/
-
-      - name: Build clash.yaml file
-        run: |
-          mkdir -p ./publish/clash/
-          go run geosite -D=true -F=clash
-          mv *.yaml ./publish/clash/
-
-          cp block.txt ./publish/clash/
-
-      - name: Clear
-        run: |
-          rm block.txt
+          mv geosite.dat ./publish/v2ray/
+          mv block.txt ./publish/v2ray/
 
       - name: Git push assets to "release" branch
         run: |

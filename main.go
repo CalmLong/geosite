@@ -6,28 +6,12 @@ import (
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"io/ioutil"
 	"log"
-	"strings"
 	"time"
 )
 
-var F string
-
 func command() {
-	onlyDomain := flag.Bool("d", false, "only output domain: domains")
-	onlyFull := flag.Bool("f", false, "only output full: domains")
 	death := flag.Bool("D", false, "detect and remove invalid domain names")
-	
-	fF := flag.String("F", "", "format output")
-	
 	flag.Parse()
-	if *onlyDomain {
-		log.Printf("only output domain")
-		output(coverOnlyDomain, blockList)
-	}
-	if *onlyFull {
-		log.Printf("only output full")
-		output(coverOnlyFull, blockList)
-	}
 	if *death {
 		t := time.Now()
 		log.Printf("clear invalid domain names ...")
@@ -40,14 +24,12 @@ func command() {
 		isDeathList(blockList)
 		log.Printf("done. %.2fm", time.Now().Sub(t).Minutes())
 	}
-	F = *fF
 }
 
 func v2rayGeoSite() {
 	t := time.Now()
 	log.Printf("creating ...")
 	ref := loadEntry()
-	
 	protoList := new(router.GeoSiteList)
 	for _, list := range ref {
 		pl, err := ParseList(list, ref)
@@ -73,15 +55,6 @@ func v2rayGeoSite() {
 }
 
 func main() {
-	// always output full format
-	output(coverOnlyFull, localList)
-	output(coverOnlyFull, allowList)
-	
 	command()
-
-	if strings.TrimSpace(F) != "" {
-		autoPick(F)
-	} else {
-		v2rayGeoSite()
-	}
+	v2rayGeoSite()
 }

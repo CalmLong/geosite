@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/v2fly/v2ray-core/v4/app/router"
 	"io"
 	"io/ioutil"
 	"log"
@@ -39,41 +40,41 @@ func request(domain string) int {
 	return success
 }
 
-func handle(originalMap map[string]struct{}, deathChan chan string) {
+func handle(originalMap map[string]dT, deathChan chan dT) {
 	var group sync.WaitGroup
 	limit := make(chan struct{}, 1000)
-	
-	for uri := range originalMap {
-		
+
+	for _, ov := range originalMap {
+
 		limit <- struct{}{}
-		
+
 		group.Add(1)
-		
-		go func(uri string, limit chan struct{}) {
-			if uriStr, ok := removeSuffix(uri); ok {
-				if request(uriStr) == noRet {
+
+		go func(uri dT, limit chan struct{}) {
+			if uri.Type == router.Domain_Full {
+				if request(uri.Value) == noRet {
 					deathChan <- uri
 				}
 			}
 			group.Done()
 			<-limit
-		}(uri, limit)
+		}(ov, limit)
 	}
-	
+
 	group.Wait()
 }
 
-func rwCache(valueMap map[string]struct{}, write bool) {
+func rwCache(valueMap map[string]dT, write bool) {
 	if len(valueMap) == 0 {
 		return
 	}
 	const cacheName = "geoSiteDeathCacheList"
-	
+
 	fi, err := os.OpenFile(cacheName, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	
+
 	if write {
 		for k := range valueMap {
 			_, err := fi.WriteString(k + "\n")
@@ -91,12 +92,12 @@ func rwCache(valueMap map[string]struct{}, write bool) {
 			delete(valueMap, string(d))
 		}
 	}
-	
+
 	_ = fi.Close()
 }
 
-func readChan(deathChan chan string) map[string]struct{} {
-	v := make(map[string]struct{})
+func readChan(deathChan chan dT) map[string]dT {
+	v := make(map[string]dT)
 	timer := time.NewTimer(2 * time.Second)
 	for {
 		select {
@@ -104,23 +105,23 @@ func readChan(deathChan chan string) map[string]struct{} {
 			close(deathChan)
 			return v
 		case uri := <-deathChan:
-			v[uri] = struct{}{}
+			v[uri.Value] = uri
 			timer.Reset(2 * time.Second)
 		}
 	}
 }
 
-func isDeath(originalMap map[string]struct{}) {
+func isDeath(originalMap map[string]dT) {
 	rwCache(originalMap, false)
-	
-	deathChan := make(chan string, len(originalMap))
+
+	deathChan := make(chan dT, len(originalMap))
 	handle(originalMap, deathChan)
-	
+
 	deathMap := readChan(deathChan)
 	rwCache(deathMap, true)
 }
 
-func isDeathList(originalMaps ...map[string]struct{}) {
+func isDeathList(originalMaps ...map[string]dT) {
 	for i := 0; i < len(originalMaps); i++ {
 		isDeath(originalMaps[i])
 	}
