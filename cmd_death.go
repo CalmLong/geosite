@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	success = 0
-	noRet   = 3
+	success  = 0
+	nxdomain = 3
 )
 
 type aa struct {
@@ -35,7 +35,7 @@ func request(domain string) int {
 		return success
 	}
 	if ret.Status == 3 {
-		return noRet
+		return nxdomain
 	}
 	return success
 }
@@ -52,7 +52,7 @@ func handle(originalMap map[string]dT, deathChan chan dT) {
 
 		go func(uri dT, limit chan struct{}) {
 			if uri.Type == router.Domain_Full {
-				if request(uri.Value) == noRet {
+				if request(uri.Value) == nxdomain {
 					deathChan <- uri
 				}
 			}
