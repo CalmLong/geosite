@@ -12,7 +12,7 @@ const (
 	p = "/"
 )
 
-func isFullDomain(uri string) router.Domain_Type {
+func domainType(uri string) router.Domain_Type {
 	if strings.Contains(uri, "domain:") {
 		return router.Domain_Domain
 	}
@@ -45,11 +45,12 @@ func format(newOrg string, prefix ...string) string {
 }
 
 func parseUrl(raw string) (string, bool) {
-	raw = strings.ReplaceAll(raw, "http://", "")
-	raw = strings.ReplaceAll(raw, "https://", "")
-	raw = strings.ReplaceAll(raw, "ftp://", "")
-	raw = strings.ReplaceAll(raw, "websocket://", "")
-
+	raw = strings.TrimSuffix(raw, "http://")
+	raw = strings.TrimSuffix(raw, "https://")
+	raw = strings.TrimSuffix(raw, "ftp://")
+	raw = strings.TrimSuffix(raw, "ws://")
+	raw = strings.TrimSuffix(raw, "wss://")
+	
 	switch strings.Count(raw, "/") {
 	case 0:
 		return raw, true
@@ -70,7 +71,7 @@ func ResolveV2Ray(src map[string]struct{}, dst map[string]dT) {
 			Value:  ks[1],
 			Format: k,
 			Keep:   true,
-			Type:   isFullDomain(k),
+			Type:   domainType(k),
 		}
 		switch len(ks) {
 		case 2:
@@ -79,7 +80,7 @@ func ResolveV2Ray(src map[string]struct{}, dst map[string]dT) {
 			k = ks[1]
 			dt.Value = k
 			dt.Format = ks[0] + ":" + ks[1]
-			dt.Type = isFullDomain(dt.Format)
+			dt.Type = domainType(dt.Format)
 			switch ks[2] {
 			case "@cn":
 				cnList[k] = dt
@@ -109,18 +110,18 @@ func Resolve(src map[string]struct{}, dst map[string]dT) {
 		if strings.ContainsRune(original, '\t') {
 			original = strings.ReplaceAll(original, "\t", " ")
 		}
-
+		
 		newOrg := strings.ToLower(original)
-
+		
 		// 移除前缀为 0.0.0.0 或者 127.0.0.1 (移除第一个空格前的内容)
 		index := strings.IndexRune(newOrg, ' ')
 		if index > -1 {
 			newOrg = strings.ReplaceAll(newOrg, newOrg[:index], "")
 		}
-
+		
 		// V2Ray
 		newOrg = format(newOrg, "domain:", "full:", "regexp:", "keyword:", ":@ads")
-
+		
 		// 移除行中的空格
 		newOrg = strings.TrimSpace(newOrg)
 		// 再一次验证第一个字符为 # 时跳过
@@ -135,24 +136,24 @@ func Resolve(src map[string]struct{}, dst map[string]dT) {
 			newOrg = newOrg[strings.Index(newOrg, p)+1:]
 			newOrg = newOrg[:strings.Index(newOrg, p)]
 		}
-
+		
 		newOrg = strings.TrimSpace(newOrg)
 		// 检测是否有端口号，有则移除端口号
 		if i := strings.IndexRune(newOrg, ':'); i != -1 {
 			newOrg = newOrg[:i]
 		}
-
+		
 		// 包含正则符号的
 		if strings.ContainsAny(newOrg, "$()*+[?\\^{|") {
 			continue
 		}
-
+		
 		if v, ok := parseUrl(newOrg); ok {
 			newOrg = v
 		} else {
 			continue
 		}
-
+		
 		urlStr, err := url.Parse(newOrg)
 		if err != nil {
 			continue
@@ -168,10 +169,10 @@ func Resolve(src map[string]struct{}, dst map[string]dT) {
 		if urlString == "" {
 			continue
 		}
-
+		
 		dst[urlString] = dT{
 			Value: urlString,
-			Type:  isFullDomain(urlString),
+			Type:  domainType(urlString),
 		}
 	}
 }

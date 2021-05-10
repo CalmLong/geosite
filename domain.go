@@ -43,17 +43,17 @@ func getEntry(name string, value map[string]dT) *List {
 			}
 		}
 	}
-
+	
 	sort.Strings(full)
 	sort.Strings(domain)
-
+	
 	lines := make([]string, 0)
 	lines = append(append(full, domain...), regex...)
-
+	
 	list := &List{
 		Name: name,
 	}
-
+	
 	for _, line := range lines {
 		entry, err := parseEntry(line)
 		if err != nil {
@@ -96,28 +96,28 @@ func init() {
 	if err != nil {
 		log.Println("read [block.txt] failed, ignore")
 	} else {
-		log.Println("init ads list ...")
+		log.Printf("init %s list ...\n", adsTag)
 		Resolve(getBodyFromUrls(block), blockList)
 		ResolveV2Ray(getBodyFromUrls(blockUrlsForV2Ray), blockList)
 	}
-
+	
 	log.Println("init suffix list ...")
 	initSuffix(suffixListRaw)
-
+	
 	log.Println("init allow list ...")
 	Resolve(getBodyFromUrls(allowUrls), allowList)
 	for ak, av := range allowList {
 		if bv, ok := blockList[ak]; ok {
-			if (bv.Type == router.Domain_Domain && av.Type == router.Domain_Domain) || bv.Type == router.Domain_Full && av.Type == router.Domain_Full {
+			if bv.Type == router.Domain_Domain && av.Type == router.Domain_Domain || bv.Type == router.Domain_Full && av.Type == router.Domain_Full {
 				delete(blockList, ak)
 			}
 		}
 	}
-
-	log.Println("init cn list ...")
+	
+	log.Printf("init %s list ...\n", cnTag)
 	Resolve(getBodyFromUrls(directUrls), cnList)
 	ResolveV2Ray(getBodyFromUrls(directUrlsForV2Ray), cnList)
-
-	log.Println("init proxy list ...")
+	
+	log.Printf("init %s list ...\n", proxyTag)
 	ResolveV2Ray(getBodyFromUrls([]string{v2rayNotCn}), proxyList)
 }
