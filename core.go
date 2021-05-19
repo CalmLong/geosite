@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"errors"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	
@@ -63,14 +60,6 @@ func (l *ParsedList) toProto() (*router.GeoSite, error) {
 		}
 	}
 	return site, nil
-}
-
-func removeComment(line string) string {
-	idx := strings.Index(line, "#")
-	if idx == -1 {
-		return line
-	}
-	return strings.TrimSpace(line[:idx])
 }
 
 func parseDomain(domain string, entry *Entry) error {
@@ -135,33 +124,6 @@ func parseEntry(line string) (Entry, error) {
 	}
 	
 	return entry, nil
-}
-
-func Load(path string) (*List, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	
-	list := &List{
-		Name: strings.ToUpper(filepath.Base(path)),
-	}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		line = removeComment(line)
-		if len(line) == 0 {
-			continue
-		}
-		entry, err := parseEntry(line)
-		if err != nil {
-			return nil, err
-		}
-		list.Entry = append(list.Entry, entry)
-	}
-	
-	return list, nil
 }
 
 func isMatchAttr(Attrs []*router.Domain_Attribute, includeKey string) bool {
