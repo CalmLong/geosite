@@ -11,6 +11,7 @@ import (
 
 func command() {
 	death := flag.Bool("D", false, "detect and remove invalid domain names")
+	format := flag.String("F", "v2ray", "")
 	flag.Parse()
 	if *death {
 		t := time.Now()
@@ -23,6 +24,29 @@ func command() {
 		}()
 		isDeathList(blockList)
 		log.Printf("done. %.2fm", time.Now().Sub(t).Minutes())
+	}
+	switch *format {
+	case "domain":
+		domainGeoSite()
+	case "v2ray":
+		v2rayGeoSite()
+	default:
+		v2rayGeoSite()
+	}
+}
+
+func domainGeoSite() {
+	full, domain, _ := getDomain(blockList)
+	if err := writer2File("domain-block.txt", full, domain); err != nil {
+		log.Fatalln(err)
+	}
+	full, domain, _ = getDomain(cnList)
+	if err := writer2File("domain-cn.txt", full, domain); err != nil {
+		log.Fatalln(err)
+	}
+	full, domain, _ = getDomain(proxyList)
+	if err := writer2File("domain-proxy.txt", full, domain); err != nil {
+		log.Fatalln(err)
 	}
 }
 
@@ -56,5 +80,4 @@ func v2rayGeoSite() {
 
 func main() {
 	command()
-	v2rayGeoSite()
 }
