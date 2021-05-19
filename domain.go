@@ -19,6 +19,26 @@ func loadEntry() map[string]*List {
 }
 
 func getEntry(name string, value map[string]dT) *List {
+	full, domain, regex := getDomain(value)
+	
+	lines := make([]string, 0)
+	lines = append(append(full, domain...), regex...)
+	
+	list := &List{
+		Name: name,
+	}
+	
+	for _, line := range lines {
+		entry, err := parseEntry(line)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		list.Entry = append(list.Entry, entry)
+	}
+	return list
+}
+
+func getDomain(value map[string]dT) ([]string, []string, []string) {
 	full := make([]string, 0)
 	domain := make([]string, 0)
 	regex := make([]string, 0)
@@ -46,22 +66,9 @@ func getEntry(name string, value map[string]dT) *List {
 	
 	sort.Strings(full)
 	sort.Strings(domain)
+	sort.Strings(regex)
 	
-	lines := make([]string, 0)
-	lines = append(append(full, domain...), regex...)
-	
-	list := &List{
-		Name: name,
-	}
-	
-	for _, line := range lines {
-		entry, err := parseEntry(line)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		list.Entry = append(list.Entry, entry)
-	}
-	return list
+	return full, domain, regex
 }
 
 func initSuffix(uri string) {
