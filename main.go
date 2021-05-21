@@ -55,15 +55,15 @@ func aghGeoSite() {
 
 func domainGeoSite() {
 	full, domain, _ := getDomain(blockList)
-	if err := writer2File("domain-block.txt", full, domain); err != nil {
+	if err := writer2File(nil, "domain-block.txt", full, domain); err != nil {
 		log.Fatalln(err)
 	}
 	full, domain, _ = getDomain(cnList)
-	if err := writer2File("domain-cn.txt", full, domain); err != nil {
+	if err := writer2File(nil, "domain-cn.txt", full, domain); err != nil {
 		log.Fatalln(err)
 	}
 	full, domain, _ = getDomain(proxyList)
-	if err := writer2File("domain-proxy.txt", full, domain); err != nil {
+	if err := writer2File(nil, "domain-proxy.txt", full, domain); err != nil {
 		log.Fatalln(err)
 	}
 }

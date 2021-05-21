@@ -7,9 +7,12 @@ import (
 	"strings"
 )
 
-func writer2File(name string, list ...[]string) error {
+func writer2File(head []string, name string, list ...[]string) error {
 	buff := bytes.NewBuffer([]byte{})
 	for _, item := range list {
+		for _, h := range head {
+			buff.WriteString(h + "\n")
+		}
 		for _, s := range item {
 			s = strings.TrimPrefix(s, "full:")
 			s = strings.TrimPrefix(s, "domain:")
