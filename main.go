@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"io/ioutil"
@@ -28,10 +29,27 @@ func command() {
 	switch *format {
 	case "domain":
 		domainGeoSite()
+	case "agh":
+		aghGeoSite()
 	case "v2ray":
 		v2rayGeoSite()
 	default:
 		v2rayGeoSite()
+	}
+}
+
+func aghGeoSite() {
+	full, domain, _ := getDomain(cnList)
+	f := make([]string, len(full))
+	for i, s := range full {
+		f[i] = fmt.Sprintf("[/%s/]223.5.5.5", trimDomain(s))
+	}
+	d := make([]string, len(domain))
+	for i, s := range domain {
+		d[i] = fmt.Sprintf("[/%s/]223.5.5.5", trimDomain(s))
+	}
+	if err := writer2File("agh-cn.txt", f, d); err != nil {
+		log.Fatalln(err)
 	}
 }
 

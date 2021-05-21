@@ -49,6 +49,12 @@ jobs:
           mv domain-proxy.txt ./publish/domain/
           cp block.txt ./publish/domain/
 
+      - name: Build agh file
+        run: |
+          mkdir -p ./publish/agh/
+          go run geosite -F=agh
+          mv agh-cn.txt ./publish/agh/
+
       - name: Git push assets to "release" branch
         run: |
           cd publish || exit 1
