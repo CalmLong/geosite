@@ -48,7 +48,8 @@ func aghGeoSite() {
 	for i, s := range domain {
 		d[i] = fmt.Sprintf("[/%s/]223.5.5.5", trimDomain(s))
 	}
-	if err := writer2File("agh-cn.txt", f, d); err != nil {
+	upstream := []string{"tls://8.8.8.8", "tls://8.8.4.4"}
+	if err := writer2File(upstream, "agh-cn.txt", f, d); err != nil {
 		log.Fatalln(err)
 	}
 }
