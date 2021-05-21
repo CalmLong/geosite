@@ -18,3 +18,9 @@ func writer2File(name string, list ...[]string) error {
 	}
 	return ioutil.WriteFile(name, buff.Bytes(), os.ModePerm)
 }
+
+func trimDomain(s string) string {
+	s = strings.TrimPrefix(s, "full:")
+	s = strings.TrimPrefix(s, "domain:")
+	return s
+}
