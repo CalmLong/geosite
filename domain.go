@@ -19,7 +19,7 @@ func loadEntry() map[string]*List {
 }
 
 func getEntry(name string, value map[string]dT) *List {
-	full, domain, regex := getDomain(value)
+	full, domain, regex := getDomain(value, true)
 	
 	lines := make([]string, 0)
 	lines = append(append(full, domain...), regex...)
@@ -38,12 +38,15 @@ func getEntry(name string, value map[string]dT) *List {
 	return list
 }
 
-func getDomain(value map[string]dT) ([]string, []string, []string) {
+func getDomain(value map[string]dT, tag bool) ([]string, []string, []string) {
 	full := make([]string, 0)
 	domain := make([]string, 0)
 	regex := make([]string, 0)
 	for _, vv := range value {
 		if vv.Keep {
+			if !tag {
+				vv.Format = trimDomain(vv.Format)
+			}
 			switch vv.Type {
 			case router.Domain_Regex:
 				regex = append(regex, vv.Format)
@@ -53,13 +56,17 @@ func getDomain(value map[string]dT) ([]string, []string, []string) {
 				full = append(full, vv.Format)
 			}
 		} else {
+			var prefix string
+			if tag {
+				prefix = strings.ToLower(vv.Type.String()) + ":"
+			}
 			switch vv.Type {
 			case router.Domain_Regex:
-				regex = append(regex, strings.ToLower(router.Domain_Regex.String())+":"+vv.Value)
+				regex = append(regex, prefix+vv.Value)
 			case router.Domain_Domain:
-				domain = append(domain, strings.ToLower(router.Domain_Domain.String())+":"+vv.Value)
+				domain = append(domain, prefix+vv.Value)
 			case router.Domain_Full:
-				full = append(full, strings.ToLower(router.Domain_Full.String())+":"+vv.Value)
+				full = append(full, prefix+vv.Value)
 			}
 		}
 	}

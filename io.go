@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -26,4 +27,14 @@ func trimDomain(s string) string {
 	s = strings.TrimPrefix(s, "full:")
 	s = strings.TrimPrefix(s, "domain:")
 	return s
+}
+
+func formatDomain(v string, d ...[]string) []string {
+	a := make([]string, 0)
+	for _, s := range d {
+		for _, sv := range s {
+			a = append(a, fmt.Sprintf(v, sv))
+		}
+	}
+	return a
 }
