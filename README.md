@@ -10,7 +10,7 @@
 |  :----:  | :----:  |  :----:    |  :----:    |
 | Adguard Home | × | [agh-cn.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/agh/agh-cn.txt) | × |
 | Clash Premium | [clashP-block.yaml](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/clashP/clashP-block.yaml) | [clashP-cn.yaml](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/clashP/clashP-cn.yaml) | [clashP-proxy.yaml](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/clashP/clashP-proxy.yaml) |
-| Pi Hole | [domain-block.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-block.txt) | [domain-cn.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-cn.txt) | [domain-block.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-proxy.txt) |
+| Pi Hole | [domain-block.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-block.txt) | [domain-cn.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-cn.txt) | [domain-proxy.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-proxy.txt) |
 | [V2Ray](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/v2ray/geosite.dat) | √ | √ | √ |
 
 ### 配置示例
