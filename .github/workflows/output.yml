@@ -55,6 +55,15 @@ jobs:
           go run geosite -F=agh
           mv agh-cn.txt ./publish/agh/
 
+      - name: Build clashP file
+        run: |
+          mkdir -p ./publish/clashP/
+          go run geosite -D=true -F=clashP
+          mv clashP-block.yaml ./publish/clashP/
+          mv clashP-cn.yaml ./publish/clashP/
+          mv clashP-proxy.yaml ./publish/clashP/
+          cp block.txt ./publish/clashP/
+
       - name: Git push assets to "release" branch
         run: |
           cd publish || exit 1
