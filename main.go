@@ -30,10 +30,34 @@ func command() {
 		domainGeoSite()
 	case "agh":
 		aghGeoSite()
+	case "clashP":
+		clashPGeoSite()
 	case "v2ray":
 		v2rayGeoSite()
 	default:
 		v2rayGeoSite()
+	}
+}
+
+func clashPGeoSite() {
+	head := []string{"payload:"}
+	full, domain, _ := getDomain(blockList, false)
+	ff := formatDomain("  - DOMAIN,%s", full)
+	fd := formatDomain("  - DOMAIN-SUFFIX,%s", domain)
+	if err := writer2File(head, "clashP-block.yaml", ff, fd); err != nil {
+		log.Fatalln(err)
+	}
+	full, domain, _ = getDomain(cnList, false)
+	ff = formatDomain("  - DOMAIN,%s", full)
+	fd = formatDomain("  - DOMAIN-SUFFIX,%s", domain)
+	if err := writer2File(head, "clashP-cn.yaml", ff, fd); err != nil {
+		log.Fatalln(err)
+	}
+	full, domain, _ = getDomain(cnList, false)
+	ff = formatDomain("  - DOMAIN,%s", full)
+	fd = formatDomain("  - DOMAIN-SUFFIX,%s", domain)
+	if err := writer2File(head, "clashP-proxy.yaml", ff, fd); err != nil {
+		log.Fatalln(err)
 	}
 }
 
