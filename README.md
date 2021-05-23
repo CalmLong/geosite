@@ -12,7 +12,7 @@ Github Action 每日 UTC+08:00 2 点自动构建
 |  :----:  | :----:  |  :----:    |  :----:    |
 | Adguard Home | × | [agh-cn.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/agh/agh-cn.txt) | × |
 | Clash Premium | [clashP-block.yaml](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/clashP/clashP-block.yaml) | [clashP-cn.yaml](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/clashP/clashP-cn.yaml) | [clashP-proxy.yaml](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/clashP/clashP-proxy.yaml) |
-| Pi Hole | [domain-block.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-block.txt) | [domain-cn.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-cn.txt) | [domain-proxy.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-proxy.txt) |
+| 通用 | [domain-block.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-block.txt) | [domain-cn.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-cn.txt) | [domain-proxy.txt](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/domain/domain-proxy.txt) |
 | [V2Ray](https://cdn.jsdelivr.net/gh/CalmLong/geosite@release/v2ray/geosite.dat) | √ | √ | √ |
 
 上述所有数据均可在 [release](https://github.com/CalmLong/geosite/tree/release) 分支中找到
