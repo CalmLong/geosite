@@ -40,7 +40,7 @@ func command() {
 }
 
 func clashPGeoSite() {
-	head := []string{"payload:"}
+	head := []string{nowTime, "payload:"}
 	full, domain, _ := getDomain(blockList, false)
 	ff := formatDomain("  - DOMAIN,%s", full)
 	fd := formatDomain("  - DOMAIN-SUFFIX,%s", domain)
@@ -71,16 +71,17 @@ func aghGeoSite() {
 }
 
 func domainGeoSite() {
+	head := []string{nowTime}
 	full, domain, _ := getDomain(blockList, false)
-	if err := writer2File(nil, "domain-block.txt", full, domain); err != nil {
+	if err := writer2File(head, "domain-block.txt", full, domain); err != nil {
 		log.Fatalln(err)
 	}
 	full, domain, _ = getDomain(cnList, false)
-	if err := writer2File(nil, "domain-cn.txt", full, domain); err != nil {
+	if err := writer2File(head, "domain-cn.txt", full, domain); err != nil {
 		log.Fatalln(err)
 	}
 	full, domain, _ = getDomain(proxyList, false)
-	if err := writer2File(nil, "domain-proxy.txt", full, domain); err != nil {
+	if err := writer2File(head, "domain-proxy.txt", full, domain); err != nil {
 		log.Fatalln(err)
 	}
 }

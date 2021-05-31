@@ -1,6 +1,9 @@
 package main
 
-import "github.com/v2fly/v2ray-core/v4/app/router"
+import (
+	"github.com/v2fly/v2ray-core/v4/app/router"
+	"time"
+)
 
 const (
 	adsTag   = "category-ads-all"
@@ -48,3 +51,9 @@ var (
 	proxyList  = make(map[string]dT)
 	suffixList = make(map[string]struct{})
 )
+
+var nowTime string
+
+func init() {
+	nowTime = "# TIME: " + time.Now().In(time.FixedZone("CST", 8*3600)).Format("2006-01-02 15:04:05")
+}
