@@ -1,0 +1,2 @@
+https://cdn.jsdelivr.net/gh/neoFelhz/neohosts@gh-pages/basic/hosts
+https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews/hosts
