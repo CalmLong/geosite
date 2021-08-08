@@ -22,16 +22,6 @@ var directUrls = []string{
 	"https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf",
 }
 
-var blockUrlsForV2Ray = []string{
-	"https://raw.githubusercontent.com/CalmLong/domain-list/master/block.txt",
-	"https://raw.githubusercontent.com/v2fly/domain-list-community/release/category-ads-all.txt",
-}
-
-var directUrlsForV2Ray = []string{
-	"https://raw.githubusercontent.com/v2fly/domain-list-community/release/cn.txt",
-	"https://raw.githubusercontent.com/CalmLong/domain-list/master/cn.txt",
-}
-
 const (
 	v2rayNotCn    = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/geolocation-!cn.txt"
 	suffixListRaw = "https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat"

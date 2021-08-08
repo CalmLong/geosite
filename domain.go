@@ -112,7 +112,6 @@ func init() {
 	} else {
 		log.Printf("init %s list ...\n", adsTag)
 		Resolve(getBodyFromUrls(block), blockList)
-		ResolveV2Ray(getBodyFromUrls(blockUrlsForV2Ray), blockList)
 	}
 	
 	log.Println("init suffix list ...")
@@ -130,8 +129,7 @@ func init() {
 	
 	log.Printf("init %s list ...\n", cnTag)
 	Resolve(getBodyFromUrls(directUrls), cnList)
-	ResolveV2Ray(getBodyFromUrls(directUrlsForV2Ray), cnList)
-	
+
 	log.Printf("init %s list ...\n", proxyTag)
 	ResolveV2Ray(getBodyFromUrls([]string{v2rayNotCn}), proxyList)
 }
