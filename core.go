@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	
+
 	"github.com/v2fly/v2ray-core/v4/app/router"
 )
 
@@ -69,13 +69,13 @@ func parseDomain(domain string, entry *Entry) error {
 		entry.Value = strings.ToLower(kv[0])
 		return nil
 	}
-	
+
 	if len(kv) == 2 {
 		entry.Type = strings.ToLower(kv[0])
 		entry.Value = strings.ToLower(kv[1])
 		return nil
 	}
-	
+
 	return errors.New("Invalid format: " + domain)
 }
 
@@ -84,7 +84,7 @@ func parseAttribute(attr string) (*router.Domain_Attribute, error) {
 	if len(attr) == 0 || attr[0] != '@' {
 		return &attribute, errors.New("invalid attribute: " + attr)
 	}
-	
+
 	// Trim attribute prefix `@` character
 	attr = attr[1:]
 	parts := strings.Split(attr, "=")
@@ -105,16 +105,16 @@ func parseAttribute(attr string) (*router.Domain_Attribute, error) {
 func parseEntry(line string) (Entry, error) {
 	line = strings.TrimSpace(line)
 	parts := strings.Split(line, " ")
-	
+
 	var entry Entry
 	if len(parts) == 0 {
 		return entry, errors.New("empty entry")
 	}
-	
+
 	if err := parseDomain(parts[0], &entry); err != nil {
 		return entry, err
 	}
-	
+
 	for i := 1; i < len(parts); i++ {
 		attr, err := parseAttribute(parts[i])
 		if err != nil {
@@ -122,7 +122,7 @@ func parseEntry(line string) (Entry, error) {
 		}
 		entry.Attrs = append(entry.Attrs, attr)
 	}
-	
+
 	return entry, nil
 }
 
@@ -135,7 +135,7 @@ func isMatchAttr(Attrs []*router.Domain_Attribute, includeKey string) bool {
 		mustMatch = false
 		matchName = strings.TrimLeft(includeKey, "!")
 	}
-	
+
 	for _, Attr := range Attrs {
 		attrName := Attr.Key
 		if mustMatch {
@@ -184,7 +184,7 @@ func ParseList(list *List, ref map[string]*List) (*ParsedList, error) {
 							continue
 						}
 						pl.Inclusion[InclusionName] = true
-						
+
 						refList := ref[refName]
 						if refList == nil {
 							return nil, errors.New(entry.Value + " not found.")
@@ -217,6 +217,6 @@ func ParseList(list *List, ref map[string]*List) (*ParsedList, error) {
 		}
 	}
 	pl.Entry = entryList
-	
+
 	return pl, nil
 }

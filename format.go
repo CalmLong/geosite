@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/router"
 	"net"
 	"net/url"
 	"strings"
+
+	"github.com/v2fly/v2ray-core/v4/app/router"
 )
 
 const (
@@ -50,7 +51,7 @@ func parseUrl(raw string) (string, bool) {
 	raw = strings.TrimSuffix(raw, "ftp://")
 	raw = strings.TrimSuffix(raw, "ws://")
 	raw = strings.TrimSuffix(raw, "wss://")
-	
+
 	switch strings.Count(raw, "/") {
 	case 0:
 		return raw, true
@@ -95,7 +96,7 @@ func ResolveV2Ray(src map[string]struct{}, dst map[string]dT) {
 	}
 }
 
-func Resolve(src map[string]struct{}, dst map[string]dT) {
+func Resolve(src map[string]struct{}, dst map[string]dT, onlyDomain bool) {
 	for k := range src {
 		original := k
 		// 第一个字符为 # 或 ! 时跳过
@@ -110,18 +111,18 @@ func Resolve(src map[string]struct{}, dst map[string]dT) {
 		if strings.ContainsRune(original, '\t') {
 			original = strings.ReplaceAll(original, "\t", " ")
 		}
-		
+
 		newOrg := strings.ToLower(original)
-		
+
 		// 移除前缀为 0.0.0.0 或者 127.0.0.1 (移除第一个空格前的内容)
 		index := strings.IndexRune(newOrg, ' ')
 		if index > -1 {
 			newOrg = strings.ReplaceAll(newOrg, newOrg[:index], "")
 		}
-		
+
 		// V2Ray
 		newOrg = format(newOrg, "domain:", "full:", "regexp:", "keyword:", ":@ads")
-		
+
 		// 移除行中的空格
 		newOrg = strings.TrimSpace(newOrg)
 		// 再一次验证第一个字符为 # 时跳过
@@ -136,24 +137,24 @@ func Resolve(src map[string]struct{}, dst map[string]dT) {
 			newOrg = newOrg[strings.Index(newOrg, p)+1:]
 			newOrg = newOrg[:strings.Index(newOrg, p)]
 		}
-		
+
 		newOrg = strings.TrimSpace(newOrg)
 		// 检测是否有端口号，有则移除端口号
 		if i := strings.IndexRune(newOrg, ':'); i != -1 {
 			newOrg = newOrg[:i]
 		}
-		
+
 		// 包含正则符号的
 		if strings.ContainsAny(newOrg, "$()*+[?\\^{|") {
 			continue
 		}
-		
+
 		if v, ok := parseUrl(newOrg); ok {
 			newOrg = v
 		} else {
 			continue
 		}
-		
+
 		urlStr, err := url.Parse(newOrg)
 		if err != nil {
 			continue
@@ -169,10 +170,15 @@ func Resolve(src map[string]struct{}, dst map[string]dT) {
 		if urlString == "" {
 			continue
 		}
-		
-		dst[urlString] = dT{
-			Value: urlString,
-			Type:  domainType(urlString),
+
+		v := dT{Value: urlString}
+
+		if onlyDomain {
+			v.Type = router.Domain_Domain
+		} else {
+			v.Type = domainType(urlString)
 		}
+
+		dst[urlString] = v
 	}
 }

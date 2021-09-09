@@ -40,11 +40,11 @@ func doRequest(uri string) int {
 
 func handle(valueMap map[string]dT, deathChan chan dT, wait chan int) {
 	limit := make(chan struct{}, 1000)
-	
+
 	for _, ov := range valueMap {
-		
+
 		limit <- struct{}{}
-		
+
 		go func(uri dT, limit chan struct{}) {
 			if uri.Type == router.Domain_Full {
 				if doRequest(uri.Value) == NXDOMAIN {
@@ -54,7 +54,7 @@ func handle(valueMap map[string]dT, deathChan chan dT, wait chan int) {
 			<-limit
 		}(ov, limit)
 	}
-	
+
 	wait <- 1
 }
 
@@ -63,12 +63,12 @@ func rwCache(valueMap map[string]dT, write bool) {
 		return
 	}
 	const cacheName = "geoSiteDeathCacheList"
-	
+
 	fi, err := os.OpenFile(cacheName, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	
+
 	if write {
 		for k := range valueMap {
 			_, err := fi.WriteString(k + "\n")
@@ -86,7 +86,7 @@ func rwCache(valueMap map[string]dT, write bool) {
 			delete(valueMap, string(d))
 		}
 	}
-	
+
 	_ = fi.Close()
 }
 
@@ -107,14 +107,14 @@ func readChan(deathChan chan dT) map[string]dT {
 
 func isDeath(valueMap map[string]dT) {
 	rwCache(valueMap, false)
-	
+
 	wait := make(chan int, 1)
-	
+
 	deathChan := make(chan dT, len(valueMap))
 	handle(valueMap, deathChan, wait)
-	
+
 	<-wait
-	
+
 	deathMap := readChan(deathChan)
 	rwCache(deathMap, true)
 }
