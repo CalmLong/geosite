@@ -1,13 +1,9 @@
 package main
 
 import (
-	"bufio"
-	"io"
 	"log"
-	"net/http"
-	"sort"
 	"strings"
-
+	
 	"github.com/v2fly/v2ray-core/v4/app/router"
 )
 
@@ -19,11 +15,12 @@ func loadEntry() map[string]*List {
 	return ref
 }
 
-func getEntry(name string, value map[string]dT) *List {
-	full, domain, regex := getDomain(value, true)
+func getEntry(name string, value map[string]router.Domain_Type) *List {
+	full, domain, plain, regex := getDomain(value)
 
 	lines := make([]string, 0)
 	lines = append(append(full, domain...), regex...)
+	lines = append(lines, plain...)
 
 	list := &List{
 		Name: name,
@@ -39,71 +36,28 @@ func getEntry(name string, value map[string]dT) *List {
 	return list
 }
 
-func getDomain(value map[string]dT, tag bool) ([]string, []string, []string) {
+func getDomain(value map[string]router.Domain_Type) ([]string, []string, []string, []string) {
 	full := make([]string, 0)
 	domain := make([]string, 0)
+	plain := make([]string, 0)
 	regex := make([]string, 0)
-	for _, vv := range value {
-		if vv.Keep {
-			if !tag {
-				vv.Format = trimDomain(vv.Format)
-			}
-			switch vv.Type {
-			case router.Domain_Regex:
-				regex = append(regex, vv.Format)
-			case router.Domain_Domain:
-				domain = append(domain, vv.Format)
-			case router.Domain_Full:
-				full = append(full, vv.Format)
-			}
-		} else {
-			var prefix string
-			if tag {
-				prefix = strings.ToLower(vv.Type.String()) + ":"
-			}
-			switch vv.Type {
-			case router.Domain_Regex:
-				regex = append(regex, prefix+vv.Value)
-			case router.Domain_Domain:
-				domain = append(domain, prefix+vv.Value)
-			case router.Domain_Full:
-				full = append(full, prefix+vv.Value)
-			}
+	
+	for k, v := range value {
+		vd := strings.ToLower(v.String()) + ":" + k
+		
+		switch v {
+		case router.Domain_Full:
+			full = append(full, vd)
+		case router.Domain_Domain:
+			domain = append(domain, vd)
+		case router.Domain_Plain:
+			plain = append(plain, vd)
+		case router.Domain_Regex:
+			regex = append(regex, vd)
 		}
 	}
-
-	sort.Strings(full)
-	sort.Strings(domain)
-	sort.Strings(regex)
-
-	return full, domain, regex
-}
-
-func initSuffix(uri string) {
-	log.Println(uri)
-	resp, err := http.Get(uri)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	body := bufio.NewReader(resp.Body)
-	for {
-		l, _, e := body.ReadLine()
-		if e == io.EOF {
-			break
-		}
-		line := string(l)
-		if strings.Contains(line, "//") {
-			continue
-		}
-		if strings.Count(line, ".") != 1 {
-			continue
-		}
-		if idx := strings.IndexRune(line, '*'); idx != -1 {
-			line = line[idx+1:]
-		}
-		line = "." + line
-		suffixList[line] = struct{}{}
-	}
+	
+	return full, domain, plain, regex
 }
 
 func init() {
@@ -111,26 +65,13 @@ func init() {
 	if err != nil {
 		log.Println("read [block.txt] failed, ignore")
 	} else {
-		log.Printf("init %s list ...\n", adsTag)
-		Resolve(getBodyFromUrls(block), blockList, false)
+		log.Printf("Prepare %s list ...\n", adsTag)
+		Resolve(getBodyFromUrls(block), blockList, router.Domain_Full)
 	}
 
-	log.Println("init suffix list ...")
-	initSuffix(suffixListRaw)
+	log.Printf("Prepare %s list ...\n", cnTag)
+	Resolve(getBodyFromUrls(directUrls), cnList, router.Domain_Domain)
 
-	log.Println("init allow list ...")
-	Resolve(getBodyFromUrls(allowUrls), allowList, false)
-	for ak, av := range allowList {
-		if bv, ok := blockList[ak]; ok {
-			if bv.Type == router.Domain_Domain && av.Type == router.Domain_Domain || bv.Type == router.Domain_Full && av.Type == router.Domain_Full {
-				delete(blockList, ak)
-			}
-		}
-	}
-
-	log.Printf("init %s list ...\n", cnTag)
-	Resolve(getBodyFromUrls(directUrls), cnList, true)
-
-	log.Printf("init %s list ...\n", proxyTag)
+	log.Printf("Prepare %s list ...\n", proxyTag)
 	ResolveV2Ray(getBodyFromUrls([]string{v2rayNotCn}), proxyList)
 }

@@ -14,81 +14,39 @@ const (
 )
 
 func domainType(uri string) router.Domain_Type {
-	if strings.Contains(uri, "domain:") {
+	if strings.HasPrefix(uri, "domain:") {
 		return router.Domain_Domain
 	}
-	if strings.Contains(uri, "regexp:") {
+	if strings.HasPrefix(uri, "regexp:") {
 		return router.Domain_Regex
 	}
-	if strings.Contains(uri, "full:") {
+	if strings.HasPrefix(uri, "full:") {
 		return router.Domain_Full
 	}
-	switch strings.Count(uri, ".") {
-	case 1:
-		return router.Domain_Domain
-	case 2:
-		for suffix := range suffixList {
-			if strings.Contains(uri, suffix) {
-				return router.Domain_Domain
-			}
-		}
-		fallthrough
-	default:
-		return router.Domain_Full
-	}
+	return router.Domain_Plain
 }
 
-func format(newOrg string, prefix ...string) string {
-	for _, s := range prefix {
-		newOrg = strings.ReplaceAll(newOrg, s, "")
-	}
-	return newOrg
-}
-
-func parseUrl(raw string) (string, bool) {
-	raw = strings.TrimSuffix(raw, "http://")
-	raw = strings.TrimSuffix(raw, "https://")
-	raw = strings.TrimSuffix(raw, "ftp://")
-	raw = strings.TrimSuffix(raw, "ws://")
-	raw = strings.TrimSuffix(raw, "wss://")
-
-	switch strings.Count(raw, "/") {
-	case 0:
-		return raw, true
-	case 1:
-		return raw[:len(raw)-1], true
-	default:
-		return "", false
-	}
-}
-
-func ResolveV2Ray(src map[string]struct{}, dst map[string]dT) {
+func ResolveV2Ray(src map[string]struct{}, dst map[string]router.Domain_Type) {
 	for k := range src {
 		if strings.Contains(k, "#") {
 			continue
 		}
-		ks := strings.Split(k, ":")
-		dt := dT{
-			Value:  ks[1],
-			Format: k,
-			Keep:   true,
-			Type:   domainType(k),
-		}
-		switch len(ks) {
+		// domain:github.com:@noCN
+		og := strings.Split(k, ":")
+		
+		switch len(og) {
 		case 2:
-			dst[ks[1]] = dt
+			dst[og[1]] = domainType(k)
 		case 3:
-			k = ks[1]
-			dt.Value = k
-			dt.Format = ks[0] + ":" + ks[1]
-			dt.Type = domainType(dt.Format)
-			switch ks[2] {
+			v := og[1] // github.com
+			t := domainType(k)
+			switch og[2] {
 			case "@cn":
-				cnList[k] = dt
+				cnList[v] = t
 			case "@ads":
-				blockList[k] = dt
+				blockList[v] = t
 			default:
-				dst[k] = dt
+				dst[v] = t
 			}
 		default:
 			continue
@@ -96,62 +54,47 @@ func ResolveV2Ray(src map[string]struct{}, dst map[string]dT) {
 	}
 }
 
-func Resolve(src map[string]struct{}, dst map[string]dT, onlyDomain bool) {
+func Resolve(src map[string]struct{}, dst map[string]router.Domain_Type, rt router.Domain_Type) {
 	for k := range src {
-		original := k
-		// 第一个字符为 # 或 ! 时跳过
-		if strings.IndexRune(original, j) == 0 || strings.IndexRune(original, '!') == 0 {
+		k = strings.TrimSpace(k)
+		if k == "" {
 			continue
 		}
-		// 为空行时跳过
-		if strings.TrimSpace(original) == "" {
+
+		if strings.IndexRune(k, j) == 0 || strings.IndexRune(k, '!') == 0 {
 			continue
 		}
-		// 中间包含特殊空格的
-		if strings.ContainsRune(original, '\t') {
-			original = strings.ReplaceAll(original, "\t", " ")
+
+		if strings.ContainsRune(k, '\t') {
+			k = strings.ReplaceAll(k, "\t", " ")
 		}
 
-		newOrg := strings.ToLower(original)
+		newOrg := strings.ToLower(k)
 
-		// 移除前缀为 0.0.0.0 或者 127.0.0.1 (移除第一个空格前的内容)
-		index := strings.IndexRune(newOrg, ' ')
-		if index > -1 {
-			newOrg = strings.ReplaceAll(newOrg, newOrg[:index], "")
+		if idx := strings.IndexRune(newOrg, ' '); idx > -1 {
+			newOrg = strings.ReplaceAll(newOrg, newOrg[:idx], "")
 		}
 
-		// V2Ray
-		newOrg = format(newOrg, "domain:", "full:", "regexp:", "keyword:", ":@ads")
-
-		// 移除行中的空格
 		newOrg = strings.TrimSpace(newOrg)
-		// 再一次验证第一个字符为 # 时跳过
-		if strings.IndexRune(original, j) == 0 {
+		if strings.IndexRune(k, j) == 0 {
 			continue
 		}
+
 		if strings.ContainsRune(newOrg, j) {
 			newOrg = newOrg[:strings.IndexRune(newOrg, j)]
 		}
-		// dnsmasq-list
 		if d := strings.Count(newOrg, p); d == 2 {
 			newOrg = newOrg[strings.Index(newOrg, p)+1:]
 			newOrg = newOrg[:strings.Index(newOrg, p)]
 		}
 
 		newOrg = strings.TrimSpace(newOrg)
-		// 检测是否有端口号，有则移除端口号
 		if i := strings.IndexRune(newOrg, ':'); i != -1 {
 			newOrg = newOrg[:i]
 		}
 
-		// 包含正则符号的
 		if strings.ContainsAny(newOrg, "$()*+[?\\^{|") {
-			continue
-		}
-
-		if v, ok := parseUrl(newOrg); ok {
-			newOrg = v
-		} else {
+			dst[newOrg] = router.Domain_Regex
 			continue
 		}
 
@@ -160,7 +103,6 @@ func Resolve(src map[string]struct{}, dst map[string]dT, onlyDomain bool) {
 			continue
 		}
 		urlString := urlStr.String()
-		// 如果为 IP 则跳过
 		if ip := net.ParseIP(urlString); ip != nil {
 			continue
 		}
@@ -171,14 +113,8 @@ func Resolve(src map[string]struct{}, dst map[string]dT, onlyDomain bool) {
 			continue
 		}
 
-		v := dT{Value: urlString}
-
-		if onlyDomain {
-			v.Type = router.Domain_Domain
-		} else {
-			v.Type = domainType(urlString)
-		}
-
-		dst[urlString] = v
+		dst[urlString] = rt
 	}
+
+	src = nil
 }
