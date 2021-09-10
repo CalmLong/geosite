@@ -33,7 +33,8 @@ jobs:
       - name: Build geosite.dat file
         run: |
           mkdir -p ./publish/v2ray/
-          go run geosite
+          go build geosite
+          ./geosite
           mv geosite.dat ./publish/v2ray/
           cp block.txt ./publish/v2ray/
 
