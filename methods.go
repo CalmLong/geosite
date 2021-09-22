@@ -2,28 +2,28 @@ package main
 
 import (
 	"bufio"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"sort"
 	"strings"
 )
 
-func GetUrlsFromTxt(name string) ([]string, error) {
-	tmpUrls := make(map[string]struct{}, 0)
+func GetUrlsFromTxt(name string) []string {
 	fi, err := os.Open(name)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return []string{}
 	}
-	buff := bufio.NewReader(fi)
-	for {
-		b, _, e := buff.ReadLine()
-		if e == io.EOF {
-			break
-		}
-		urlStr := string(b)
+	defer func() {
+		_ = fi.Close()
+	}()
+	
+	urls := make([]string, 0)
+	
+	sc := bufio.NewScanner(fi)
+	for sc.Scan() {
+		urlStr := sc.Text()
 		if strings.TrimSpace(urlStr) == "" {
 			continue
 		}
@@ -32,35 +32,28 @@ func GetUrlsFromTxt(name string) ([]string, error) {
 		}
 		u, err := url.Parse(urlStr)
 		if err != nil {
-			return nil, err
+			log.Fatalln(err)
 		}
-		tmpUrls[u.String()] = struct{}{}
+		urls = append(urls, u.String())
 	}
-	urls := make([]string, 0)
-	for k, _ := range tmpUrls {
-		urls = append(urls, k)
-	}
-	sort.Strings(urls)
-	return urls, fi.Close()
+	
+	return urls
 }
 
-func getBodyFromUrls(urls []string) (dst map[string]struct{}) {
+func getBodyFromUrls(uri ...string) (dst map[string]struct{}) {
 	dst = make(map[string]struct{})
-	for _, u := range urls {
+	for _, u := range uri {
 		log.Println(u)
 		resp, err := http.Get(u)
 		if err != nil {
 			log.Println(err)
 			return dst
 		}
-		body := bufio.NewReader(resp.Body)
-		for {
-			l, _, e := body.ReadLine()
-			if e == io.EOF {
-				break
-			}
-			dst[string(l)] = struct{}{}
+		sc := bufio.NewScanner(resp.Body)
+		for sc.Scan() {
+			dst[sc.Text()] = struct{}{}
 		}
+		_ = resp.Body.Close()
 	}
 	return dst
 }
