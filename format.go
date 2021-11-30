@@ -1,17 +1,25 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"net"
-	"net/url"
+	"log"
+	"net/http"
 	"strings"
 	
 	"github.com/v2fly/v2ray-core/v4/app/router"
 )
 
 const (
-	j = '#'
-	p = "/"
+	adsTag   = "category-ads-all"
+	cnTag    = "cn"
+	proxyTag = "geolocation-!cn"
+)
+
+const (
+	adList    = "https://raw.githubusercontent.com/reflect2/adblock-list/release/domain.txt"
+	chinaList = "https://raw.githubusercontent.com/reflect2/china-domain-list/release/domain.txt"
+	proxyList = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/geolocation-!cn.txt"
 )
 
 const (
@@ -63,78 +71,59 @@ func HasPattern(s string) bool {
 	return false
 }
 
-func Resolve(src map[string]struct{}) []string {
-	name := make([]string, 0)
-	for k := range src {
-		if HasPattern(k) {
-			if strings.Contains(k, "@") {
-				continue
-			}
-			
-			name = append(name, k)
+func Resolve(src []string) []string {
+	name := make([]string, 0, len(src))
+	for i := 0; i < len(src); i++ {
+		if !HasPattern(src[i]) || strings.Contains(src[i], "@") {
 			continue
 		}
-		
-		k = strings.TrimSpace(k)
-		if k == "" {
-			continue
-		}
-		
-		if strings.IndexRune(k, j) == 0 || strings.IndexRune(k, '!') == 0 {
-			continue
-		}
-		
-		if strings.ContainsRune(k, '\t') {
-			k = strings.ReplaceAll(k, "\t", " ")
-		}
-		
-		newOrg := strings.ToLower(k)
-		
-		if idx := strings.IndexRune(newOrg, ' '); idx > -1 {
-			newOrg = strings.ReplaceAll(newOrg, newOrg[:idx], "")
-		}
-		
-		newOrg = strings.TrimSpace(newOrg)
-		if strings.IndexRune(k, j) == 0 {
-			continue
-		}
-		
-		if strings.ContainsRune(newOrg, j) {
-			newOrg = newOrg[:strings.IndexRune(newOrg, j)]
-		}
-		if d := strings.Count(newOrg, p); d == 2 {
-			newOrg = newOrg[strings.Index(newOrg, p)+1:]
-			newOrg = newOrg[:strings.Index(newOrg, p)]
-		}
-		
-		newOrg = strings.TrimSpace(newOrg)
-		if i := strings.IndexRune(newOrg, ':'); i != -1 {
-			newOrg = newOrg[:i]
-		}
-		
-		if strings.ContainsAny(newOrg, "$()*+[?\\^{|") {
-			name = append(name, fmt.Sprintf("%s:%s", router.Domain_Regex, k))
-			continue
-		}
-		
-		urlStr, err := url.Parse(newOrg)
-		if err != nil {
-			continue
-		}
-		urlString := urlStr.String()
-		if ip := net.ParseIP(urlString); ip != nil {
-			continue
-		}
-		if strings.IndexRune(urlString, '.') == 0 {
-			urlString = urlString[1:]
-		}
-		if urlString == "" {
-			continue
-		}
-		
-		n, t := Pattern(urlString)
+		n, t := Pattern(src[i])
 		name = append(name, fmt.Sprintf("%s:%s", t, n))
 	}
-	
 	return name
+}
+
+func getDomain(uri ...string) []string {
+	tmp := make(map[string]struct{})
+	for _, u := range uri {
+		log.Println(u)
+		resp, err := http.Get(u)
+		if err != nil {
+			log.Panic(err)
+		}
+		sc := bufio.NewScanner(resp.Body)
+		for sc.Scan() {
+			tmp[sc.Text()] = struct{}{}
+		}
+		_ = resp.Body.Close()
+	}
+	domain := make([]string, 0, len(tmp))
+	for d := range tmp {
+		domain = append(domain, d)
+	}
+	return domain
+}
+
+func loadEntry() map[string]*List {
+	ref := make(map[string]*List)
+	ref[adsTag] = getEntry(adsTag, Resolve(getDomain(adList)))
+	ref[cnTag] = getEntry(cnTag, Resolve(getDomain(chinaList)))
+	ref[proxyTag] = getEntry(proxyTag, Resolve(getDomain(proxyList)))
+	return ref
+}
+
+func getEntry(name string, domain []string) *List {
+	list := &List{
+		Name: name,
+	}
+	
+	for i := 0; i < len(domain); i++ {
+		entry, err := parseEntry(domain[i])
+		if err != nil {
+			log.Fatalln(err)
+		}
+		list.Entry = append(list.Entry, entry)
+	}
+	
+	return list
 }
