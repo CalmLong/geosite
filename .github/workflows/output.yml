@@ -34,7 +34,6 @@ jobs:
           mkdir -p ./publish/v2ray/
           go run geosite
           mv geosite.dat ./publish/v2ray/
-          cp block.txt ./publish/v2ray/
 
       - name: Git push assets to "release" branch
         run: |
@@ -51,4 +50,3 @@ jobs:
       - name: Delete publish directory
         run: |
           rm -rf publish
-          rm -rf block.txt
