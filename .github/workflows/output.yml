@@ -29,10 +29,6 @@ jobs:
       - name: Checkout codebase
         uses: actions/checkout@v2.4.0
 
-      - name: Get block.txt
-        run: |
-          curl -L https://raw.githubusercontent.com/CalmLong/custom-block/main/block.txt -o block.txt
-
       - name: Build geosite.dat file
         run: |
           mkdir -p ./publish/v2ray/
