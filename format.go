@@ -17,8 +17,8 @@ const (
 )
 
 const (
-	adList    = "https://raw.githubusercontent.com/reflect2/adblock-list/release/domain.txt"
-	chinaList = "https://raw.githubusercontent.com/reflect2/china-domain-list/release/domain.txt"
+	adList    = "https://raw.githubusercontent.com/carrnot/adblock-list/release/domain.txt"
+	chinaList = "https://raw.githubusercontent.com/carrnot/china-domain-list/release/domain.txt"
 	proxyList = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/geolocation-!cn.txt"
 )
 
